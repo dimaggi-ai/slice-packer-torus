@@ -1,0 +1,13 @@
+{
+  "_comment": "Free chips are plentiful and shaped like nothing. The 1024-chip job is refused with free chips still on the floor. Exit 1.",
+  "pod": {"k": 16, "n": 3, "wrap": true},
+  "allocations": {
+    "resident-a": {"origin": [2, 0, 0], "extent": [2, 16, 16], "tenant": "research"},
+    "resident-b": {"origin": [6, 0, 0], "extent": [2, 16, 16], "tenant": "platform"},
+    "resident-c": {"origin": [10, 0, 0], "extent": [2, 16, 16], "tenant": "analytics"},
+    "resident-d": {"origin": [14, 0, 0], "extent": [1, 16, 16], "tenant": "research"}
+  },
+  "demand": [
+    {"job_id": "wants-1024", "chips": 1024, "tenant": "research"}
+  ]
+}

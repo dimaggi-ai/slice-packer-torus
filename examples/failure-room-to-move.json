@@ -1,0 +1,7 @@
+{
+  "_comment": "One job on an otherwise empty pod. A same-shape move exists, so the control plane may act alone. Exit 0.",
+  "pod": {"k": 16, "n": 3, "wrap": true},
+  "allocations": {
+    "pretrain-7": {"origin": [0, 0, 0], "extent": [4, 16, 16], "tenant": "research"}
+  }
+}

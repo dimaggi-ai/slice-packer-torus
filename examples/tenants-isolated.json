@@ -1,0 +1,17 @@
+{
+  "_comment": "Ten tenants, sixteen racks, one rack each. Some are refused under isolation that an open pod would have taken. Exit 1.",
+  "pod": {"k": 16, "n": 3, "wrap": true},
+  "domains": {"axis": 0, "width": 1, "label": "rack"},
+  "demand": [
+    {"job_id": "t0", "chips": 512, "tenant": "alpha"},
+    {"job_id": "t1", "chips": 512, "tenant": "bravo"},
+    {"job_id": "t2", "chips": 256, "tenant": "charlie"},
+    {"job_id": "t3", "chips": 256, "tenant": "delta"},
+    {"job_id": "t4", "chips": 256, "tenant": "echo"},
+    {"job_id": "t5", "chips": 256, "tenant": "foxtrot"},
+    {"job_id": "t6", "chips": 512, "tenant": "golf"},
+    {"job_id": "t7", "chips": 512, "tenant": "hotel"},
+    {"job_id": "t8", "chips": 256, "tenant": "india"},
+    {"job_id": "t9", "chips": 256, "tenant": "juliett"}
+  ]
+}

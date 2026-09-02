@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Slice packing on a torus pod: what it can still admit, what a chip failure costs, and who is allowed to fix it"
+abstract: >-
+  Six models for the allocation layer of a torus-connected accelerator pod. A
+  topology model in which a slice inherits a closed ring only if it spans that
+  dimension completely, so a pod described as a torus hands most jobs a mesh. A
+  packing model that replaces the free-chip count with the largest job still
+  placeable, and measures how far apart the two drift. A cordon model in which
+  the cost of one chip failure depends on where the chip was, ranging from one
+  face to half the slice, with a worst case of exactly half that no shape can
+  reduce. A re-embedding model that prices shrinking in place, which keeps the
+  hardware and breaks the checkpoint, against moving, which keeps the checkpoint
+  and costs other tenants. A tenancy model that prices blast-domain isolation
+  and identifies a request that isolation cannot satisfy at any price. And a
+  reconstitution model that separates what a control plane may do alone from
+  what needs a person, and prints what waiting for that person costs.
+authors:
+  - family-names: Nanyonga
+    given-names: Margaret
+version: 1.0.0
+date-released: "2026-09-02"
+license: MIT
+repository-code: "https://github.com/dimaggi-ai/slice-packer-torus"
+keywords:
+  - torus
+  - k-ary n-cube
+  - capacity planning
+  - fragmentation
+  - multi-tenancy
+  - fault domains

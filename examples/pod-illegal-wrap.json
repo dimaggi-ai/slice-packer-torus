@@ -1,0 +1,5 @@
+{
+  "_comment": "A dimension of extent 2 declared as wrapping. At extent 2 the wraparound duplicates the link already there, so this is refused as unreadable rather than silently modelled. Exit 2.",
+  "pod": {"extents": [2, 16, 16], "wrap": [true, true, true]},
+  "demand": [{"job_id": "a", "chips": 256}]
+}

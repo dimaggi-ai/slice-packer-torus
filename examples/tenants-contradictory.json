@@ -1,0 +1,8 @@
+{
+  "_comment": "A request for a full three-dimensional torus under rack isolation. Not a capacity shortfall: the two requirements contradict each other. Exit 1.",
+  "pod": {"k": 16, "n": 3, "wrap": true},
+  "domains": {"axis": 0, "width": 1, "label": "rack"},
+  "demand": [
+    {"job_id": "wants-a-torus", "chips": 4096, "min_torus_dims": 3, "tenant": "alpha"}
+  ]
+}

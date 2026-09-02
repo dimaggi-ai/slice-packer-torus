@@ -1,0 +1,9 @@
+{
+  "_comment": "A full pod. Every response either reshards the job or evicts a neighbour, so recovery waits for a person. Exit 1.",
+  "pod": {"k": 16, "n": 3, "wrap": true},
+  "allocations": {
+    "pretrain-7": {"origin": [0, 0, 0], "extent": [8, 16, 16], "tenant": "research"},
+    "serve-a": {"origin": [8, 0, 0], "extent": [4, 16, 16], "tenant": "platform"},
+    "batch-9": {"origin": [12, 0, 0], "extent": [4, 16, 16], "tenant": "analytics"}
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "_comment": "More demand than pod. The first jobs land, the rest are refused. Exit 1.",
+  "pod": {"k": 8, "n": 3, "wrap": true},
+  "demand": [
+    {"job_id": "a", "chips": 256, "tenant": "one"},
+    {"job_id": "b", "chips": 256, "tenant": "two"},
+    {"job_id": "c", "chips": 256, "tenant": "three"}
+  ]
+}

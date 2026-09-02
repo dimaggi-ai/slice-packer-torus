@@ -1,0 +1,11 @@
+{
+  "_comment": "A fresh 16-ary 3-cube and four jobs that all fit. Exit 0.",
+  "pod": {"k": 16, "n": 3, "wrap": true},
+  "domains": {"axis": 0, "width": 1, "label": "rack"},
+  "demand": [
+    {"job_id": "pretrain-7", "chips": 2048, "tenant": "research"},
+    {"job_id": "eval-2", "chips": 512, "tenant": "research"},
+    {"job_id": "serve-a", "chips": 512, "tenant": "platform"},
+    {"job_id": "batch-9", "chips": 256, "tenant": "analytics"}
+  ]
+}
