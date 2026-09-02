@@ -184,6 +184,11 @@ make experiments   # the three figures quoted above; each exits 1 if it stops ho
 - `SOURCES.md` --- three, and what they are and are not.
 - `STATUS.md` --- what works, what is missing, what would change the answers.
 
+## Series
+
+Part of a program on the usable capacity of large accelerator fleets:
+[dimaggi-ai.github.io/research](https://dimaggi-ai.github.io/research).
+
 ## Licence
 
 MIT. Copyright (c) 2026 Margaret Nanyonga.
