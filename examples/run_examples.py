@@ -59,6 +59,10 @@ CASES = [
      "no slice by that name"),
     (["reconstitute", "failure-no-room.json", "pretrain-7", "99,0,0"], UNREADABLE,
      "outside the pod"),
+    (["hazard", os.path.join(ROOT, "data", "titan_gc_summary_loc.csv")], OK,
+     "the Titan fleet: rank for placement, ride out the eviction"),
+    (["hazard", "no-such-fleet.csv"], UNREADABLE,
+     "no dataset fetched --- the answer is `make data`, not a guess"),
 ]
 
 

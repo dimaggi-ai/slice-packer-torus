@@ -14,11 +14,12 @@ which point is load-bearing, while a guessed one tells you what somebody hoped.
 nothing mutated, so no red set below can be an artefact of a registry that was
 already failing.
 
-The last two tests are the odd ones. They change something real and assert the
-registry does **not** notice, because it genuinely cannot: nothing in this
-repository is anchored to a measurement of a machine. Printing a blind spot is
-worth more than pretending it is covered, and each names the declined item it
-corresponds to.
+Two tests are the odd ones. They change something real and assert the
+registry does **not** notice, because on the geometry side it genuinely
+cannot: no packing figure is anchored to a measurement of a machine. (The
+failure history is, since v1.1 --- the Titan mutations below are the proof
+that those points bite.) Printing a blind spot is worth more than pretending
+it is covered, and each names the declined item it corresponds to.
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ import slicepacker.packing as packing_mod
 import slicepacker.reconstitute as reconstitute_mod
 import slicepacker.tenant as tenant_mod
 import slicepacker.torus as torus_mod
+import slicepacker.hazard as hazard_mod
 import validate_packing as registry
 
 
@@ -381,3 +383,81 @@ def test_the_registry_cannot_see_a_wrong_rack_width():
         "the registry is green under both definitions of a rack, which is "
         "exactly the blind spot declined item 11 names"
     )
+
+
+# --- the Titan anchor -------------------------------------------------------
+
+
+def test_flatten_the_cohorts_to_the_fleet_average(monkeypatch):
+    """Every cohort reports the fleet-wide rate: the covariates are erased.
+
+    This is the mutation the Titan points exist for. If batch and cage carry
+    no information, the cage ordering cannot hold and ranking cannot beat a
+    uniform pick --- and both points notice. Measured red set, not predicted.
+    """
+    original = hazard_mod.cohort_rates
+
+    def flat(fleet, key):
+        fleet = list(fleet)
+        rates = original(fleet, key)
+        deaths = sum(1 for g in fleet if g.dead)
+        years = sum(g.years for g in fleet)
+        uniform = deaths / years if years else 0.0
+        return {k: hazard_mod.Rate(r.deaths, r.gpu_years, uniform)
+                for k, r in rates.items()}
+
+    patch_everywhere(monkeypatch, "cohort_rates", flat)
+    assert red_set() == {
+        "deaths-order-by-cage-as-the-cooling-path-predicts",
+        "ranking-by-cohort-hazard-beats-a-uniform-pick",
+    }
+
+
+def test_credit_the_whole_remaining_life_to_every_bucket(monkeypatch):
+    """Drop the exposure clamp: the classic survival-accounting error.
+
+    Crediting a GPU's whole remaining life to each bucket it enters inflates
+    every denominator by a similar factor, so the hazard curve keeps its shape
+    at roughly half its height (0.119 becomes 0.054 in year three). The
+    ordering assertions all survive that; only the pinned magnitude notices.
+    Before the magnitude was pinned, this mutation's red set was measured
+    EMPTY --- which is why the magnitude is pinned.
+    """
+
+    def unclamped(fleet, buckets_days):
+        out = []
+        for lo, hi in buckets_days:
+            if hi <= lo:
+                raise ValueError(f"bucket ({lo}, {hi}) is empty or inverted")
+            exposure_years = 0.0
+            deaths = 0
+            for gpu in fleet:
+                days = gpu.years * 365.25
+                if days > lo:
+                    exposure_years += (days - lo) / 365.25  # no clamp at hi
+                    if gpu.dead and lo < days <= hi:
+                        deaths += 1
+            per_year = deaths / exposure_years if exposure_years else 0.0
+            out.append(hazard_mod.AgeBucket(lo, hi, deaths, exposure_years, per_year))
+        return out
+
+    patch_everywhere(monkeypatch, "age_hazard", unclamped)
+    assert red_set() == {"old-batch-hazard-climbs-with-no-infant-mortality"}
+
+
+def test_delete_the_eviction_decision(monkeypatch):
+    """Always ride, whatever the numbers say.
+
+    A decision function that ignores its own inequality is exactly the kind of
+    thing a refactor produces. One point pins the flip at the threshold, and
+    it is the only one that turns red.
+    """
+    original = hazard_mod.evict_or_ride
+
+    def always_ride(hazard_per_year, window_days, planned_cost, unplanned_cost):
+        v = original(hazard_per_year, window_days, planned_cost, unplanned_cost)
+        return hazard_mod.Verdict("ride", v.p_fail, v.ride_cost, v.evict_cost,
+                                  v.threshold_per_year)
+
+    patch_everywhere(monkeypatch, "evict_or_ride", always_ride)
+    assert red_set() == {"the-eviction-inequality-flips-exactly-at-its-threshold"}

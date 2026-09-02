@@ -80,7 +80,7 @@ from .tenant import (
 from .tenant import Policy as IsolationPolicy
 from .torus import Coord, SliceRect, Topology
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 #: Alias kept because ``options`` is ambiguous once imported at package level.
 failure_options = options

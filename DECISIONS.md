@@ -140,15 +140,19 @@ packings overstate capacity where 249 of 300 did, median 27% against 25% --- and
 the registry runs in 13 seconds, which puts the whole mutation suite under four
 minutes.
 
-## D13 --- This repository has no empirical anchor, and says so first
+## D13 --- The geometry has no empirical anchor, and says so first
 
-The calibrated points pin textbook closed forms for the k-ary n-cube. Nothing
-here has been compared against a machine.
+The geometry's calibrated points pin textbook closed forms for the k-ary
+n-cube; no packing figure has been compared against a machine. Since 1.1 the
+repository holds exactly one measurement --- the Titan failure history behind
+the hazard module (D15) --- and it anchors failure rates, not one packing
+figure. The two anchors are never allowed to blur into each other.
 
 **Why.** The alternative was to leave the calibrated section looking like
 evidence about hardware. A closed form is a mathematical identity: agreeing with
 it shows the code implements the model, and shows nothing about whether the
-model describes anything. Declined items 1 and 2 lead the registry output, and
+model describes anything. And a fleet's failure history says nothing about
+fragmentation. Declined items 1 and 2 lead the registry output, and
 `docs/the-models.md` repeats it.
 
 **Cost.** The honest version of this repository is weaker than it would look if
@@ -175,3 +179,34 @@ test somebody has to look at, which beats one that quietly keeps agreeing with
 itself. Two mutations are asserted by membership instead: an illegal candidate
 shape poisons fifteen points, and naming them would record the blast radius
 rather than the cause.
+
+## D15 --- The Titan file is fetched and pinned, never vendored
+
+`make data` pulls `gc_summary_loc.csv` from the OLCF repository and verifies a
+SHA-256 before anything reads it. The file does not live in this repository.
+
+**Why.** Upstream publishes the data with a citation request and no license
+grant, so redistribution is not this repository's decision to make. The pin
+keeps the other half of the bargain: every number in the README was measured
+against exactly one file, and the registry cannot silently drift onto a
+different one. A missing file turns the Titan points red rather than skipping
+them --- a green run must mean the anchor was measured.
+
+**Cost.** A fresh clone needs the network once, and the registry depends on an
+external host staying up. Both were judged cheaper than either vendoring data
+that is not ours to vendor or letting a skip look like a pass.
+
+## D16 --- The eviction inequality prices one window for one chip
+
+`evict_or_ride` compares a planned drain against `p_fail x unplanned` over a
+single decision window. No salvage value, no repeated windows, no correlation.
+
+**Why.** The one-window form is the part every richer policy contains, it is
+the part the data can actually calibrate, and its verdict on Titan's numbers
+--- preemption almost never pays; spend the estimate on placement --- is
+already the operationally interesting one. A renewal-theory eviction model on
+top of a summary file would be precision the input cannot support.
+
+**Cost.** The verdict understates eviction's value for a chip that will be
+decided about again and again. The registry's sanity point pins the flip at
+the threshold, not any claim about repeated play.

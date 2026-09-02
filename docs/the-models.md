@@ -202,12 +202,36 @@ in code.
 
 ---
 
+## 7. Hazard: when a chip earns eviction, measured on a fleet that existed
+
+`hazard.py` is the one module that reads a measurement: the public Titan GPU
+lifetime dataset (Ostrouchov et al., SC '20; `make data` fetches and SHA-pins
+it). From 30,207 GPUs and 100,889 GPU-years it computes cohort death rates by
+batch and by cage --- the cabinet's vertical cooling position --- and an
+age-resolved hazard with the exposure clamped to each bucket, which is the part
+survival accounting is usually wrong about.
+
+Two decisions come out. `evict_or_ride` prices a preemptive drain against
+`p_fail x unplanned reconstitution` over one window (DECISIONS D16): on Titan's
+numbers even the worst cohort rides unless the drain is nearly free, because
+the break-even hazard sits nearly nine times above anything the fleet
+measured. `split_rank_recall` uses the same estimate for placement instead ---
+rank held-out chips by cohort hazard learned on the other half of the fleet ---
+and the top 30% of the ranking holds 55% of the held-out deaths. Which is the
+decision Titan's operators actually shipped: reliability-aware placement, not
+preemptive eviction.
+
+The rates are Titan's own and do not transfer (ASSUMPTIONS A12). The shape ---
+cohort hazard beats fleet-uniform, position in the cooling path is a covariate
+--- is the claim, and it is exactly the W10 telemetry-fusion claim in miniature.
+
 ## What none of this is
 
-There is no measurement anywhere in this repository. The two calibrated
-validation points pin textbook closed forms, which are mathematical identities
-about an idealised k-ary n-cube: agreeing with them shows the code implements
-the model and shows nothing about whether the model describes a machine.
+There is exactly one measurement in this repository, and section 7 holds all
+of it: a failure history. It anchors death rates, not geometry. The two
+closed-form calibrated points pin mathematical identities about an idealised
+k-ary n-cube: agreeing with them shows the code implements the model and shows
+nothing about whether the model describes a machine.
 
 Every other number above --- fragmentation, cordon cost, isolation price, the
 autonomy boundary --- is a model output derived from the rules stated here, and

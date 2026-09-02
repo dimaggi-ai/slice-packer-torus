@@ -22,7 +22,7 @@ declines to check before it prints anything it does check.
 **There is no measurement in this repository.** See [What this does not
 check](#what-this-does-not-check).
 
-## Six findings
+## Seven findings
 
 **1. A pod described as a torus hands most jobs a mesh.** A slice inherits a
 closed ring in a dimension only if it spans that dimension *completely*. Over
@@ -81,6 +81,22 @@ neighbour needs a person. Share of failures that reach that boundary:
 available, and returns `None` --- never zero --- when there is no autonomous
 action at all.
 
+**7. On the one measured fleet, hazard-ranked *placement* pays and hazard-ranked
+*eviction* does not.** New in 1.1: `hazard` reads the public Titan GPU lifetime
+dataset --- 30,207 GPUs, 100,889 GPU-years (Ostrouchov et al., SC '20), fetched
+and SHA-pinned by `make data`. Deaths per GPU-year climb 0.0009 → 0.0082 →
+0.119 → 0.134 across the old batch's first four years (no infant mortality ---
+the first year is the safest), and order 0.034 → 0.071 → 0.115 by cage, bottom
+of the cooling path to top. Rank held-out chips by cohort hazard learned on the
+other half of the fleet and the top 30% hold 55% of the deaths (lift 1.84×).
+But price a preemptive drain against an unplanned reconstitution and even the
+worst cohort rides unless the drain costs under ~3% of the rebuild: the
+break-even hazard at a 90-day window and a 4:1 cost ratio is 1.17/GPU-year,
+nearly nine times anything the fleet ever measured. Titan's operators reached the same
+verdict in production: they re-cut the job mix onto reliable nodes; they did
+not evict ahead of failure. The rates are Titan's own and do not transfer
+(ASSUMPTIONS A12); the shape --- cohort beats fleet-uniform --- is the claim.
+
 ## Quickstart
 
 ```bash
@@ -111,6 +127,7 @@ treats it as an error papers over the conditions this tool exists to surface.
 | `embed` | shrink versus move, and the drain a move requires |
 | `tenant` | blast-domain isolation, its price, and its contradictions |
 | `reconstitute` | what a control plane may do alone, and what waiting costs |
+| `hazard` | when a chip earns eviction before it fails, measured on the Titan fleet |
 
 `docs/the-models.md` explains each in prose. `docs/integration.md` covers
 wiring it to a scheduler.
@@ -125,36 +142,42 @@ every run. The first two matter most:
 
 > The calibrated points pin textbook **closed forms**, which are identities
 > about an idealised k-ary n-cube. Agreeing with them shows this code implements
-> the model correctly. It is not evidence that the model describes any machine,
-> and this repository has no empirical anchor of any kind.
+> the model correctly. It is not evidence that the model describes any machine.
+> The Titan points are the only cells anchored to a measured fleet --- and they
+> anchor the *failure process*, not one packing figure.
 
 Also declined: link failures, routing, time, correlated failure, non-rectangular
 allocation, the reshard cost model, the L0/L1 boundary itself, first-fit
-placement, what a rack is, and the cost of refusing seam-straddling slices.
+placement, what a rack is, the cost of refusing seam-straddling slices, the
+paper's filtered device-level counts (the summary file cannot express them),
+any transfer of Titan's rates to another machine, and repeated-play eviction.
 
 The mutation tests in `tests/test_mutations.py` delete machinery on purpose and
-assert the exact set of registry points that turns red. Sixteen mutations, a
+assert the exact set of registry points that turns red. Nineteen mutations, a
 green unmutated control so no red set can be an artefact, and two tests that
-apply a real change and assert the registry does **not** notice --- because it
-genuinely cannot. Every asserted red set was measured. Predicting them first was
+apply a real change and assert the registry does **not** notice --- because on
+the geometry side it genuinely cannot. One Titan mutation earned its point a
+sharper assertion: dropping the exposure clamp preserved every ordering and
+first went red only once the mid-life magnitude was pinned. Every asserted red set was measured. Predicting them first was
 wrong nine times out of seventeen, and two of those surprises were points that
 had been passing on machinery that was no longer there.
 
 ## Reproducing
 
 ```bash
-make test          # 87 unit tests and 19 mutation tests (~4 min: each mutation reruns the registry)
-make validate      # 24 registry points and 13 declined items
-make examples      # 22 examples, each pinned to its exit code
+make data          # fetch + SHA-verify the Titan dataset (once; ~4 MB)
+make test          # 104 unit tests and 22 mutation tests (~5 min: each mutation reruns the registry)
+make validate      # 29 registry points and 16 declined items
+make examples      # 24 examples, each pinned to its exit code
 make experiments   # the three figures quoted above; each exits 1 if it stops holding
 ```
 
 ## Reading order
 
-- `DECISIONS.md` --- fourteen choices, what each bought and cost. Six were
+- `DECISIONS.md` --- sixteen choices, what each bought and cost. Six were
   forced by defects found while building this, and say so.
-- `ASSUMPTIONS.md` --- eleven things taken as given.
-- `SOURCES.md` --- two, and what they are not.
+- `ASSUMPTIONS.md` --- twelve things taken as given.
+- `SOURCES.md` --- three, and what they are and are not.
 - `STATUS.md` --- what works, what is missing, what would change the answers.
 
 ## Licence

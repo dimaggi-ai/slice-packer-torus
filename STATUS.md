@@ -1,21 +1,25 @@
 # Status
 
-**Version 1.0.0. Complete as a model. Unvalidated against any machine.**
+**Version 1.1.0. Complete as a model. The failure history is anchored to a measured fleet (Titan, SC '20); the geometry remains unvalidated against any machine.**
 
 ## What works
 
 Everything documented in the README, reproducible from a clean checkout with
-`make venv && make smoke-test`. 87 unit tests, 19 mutation tests, 24 registry
-points, 22 examples pinned to their exit codes, and 3 experiments that exit
+`make venv && make data && make smoke-test`. 104 unit tests, 22 mutation
+tests, 29 registry points, 24 examples pinned to their exit codes, and 3
+experiments that exit
 non-zero if the figure the README quotes stops holding.
 
 ## What this is not
 
-There is no measurement here. No pod, no scheduler, no failure, no tenant. The
-two calibrated points pin textbook closed forms for the k-ary n-cube, which
-demonstrates that `torus.py` implements the model and demonstrates nothing about
-whether the model describes any machine. SOURCES.md and declined items 1 and 2
-say this first, before any result.
+There is exactly one measurement here, and it measures failures, not packing:
+the Titan GPU lifetime dataset behind `hazard.py` (fetched and SHA-pinned, not
+vendored). No pod geometry, no scheduler, no tenant has met a machine. The two
+closed-form calibrated points pin textbook identities for the k-ary n-cube,
+which demonstrates that `torus.py` implements the model and demonstrates
+nothing about whether the model describes any machine --- and Titan's rates do
+not transfer to other machines (ASSUMPTIONS A12). SOURCES.md and declined items
+1, 2 and 15 say this first, before any result.
 
 ## Known gaps, in the order they would matter
 

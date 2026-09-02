@@ -6,3 +6,7 @@ build/
 dist/
 .pytest_cache/
 .DS_Store
+
+# fetched dataset (see data/README.md)
+data/titan_gc_summary_loc.csv
+data/*.tmp

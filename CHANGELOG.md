@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.1.0 --- 2026-09-02
+
+The repository gains its first measurement, and the boundary around it.
+
+### Added
+
+- `hazard` --- cohort death rates, age-resolved hazard (exposure clamped per
+  bucket), the one-window evict-or-ride inequality, and a split-sample ranking
+  evaluation, all measured on the public Titan GPU lifetime dataset
+  (Ostrouchov et al., SC '20): 30,207 GPUs, 100,889 GPU-years.
+- `make data` --- fetches the dataset from its canonical home and verifies a
+  pinned SHA-256; the file is never vendored (DECISIONS D15). A missing file
+  turns the registry's Titan points red rather than skipping them.
+- `slicepacker hazard` CLI subcommand, two pinned examples, 17 unit tests.
+- Five registry points: three calibrated to the SC '20 paper (headline
+  exposure, cage ordering, the no-bathtub hazard curve with its mid-life
+  magnitude pinned), one emergent (ranking beats a uniform pick on held-out
+  chips, lift 1.84x), one sanity (the inequality flips at its threshold).
+- Three measured mutation tests. One earned its point a sharper assertion:
+  dropping the exposure clamp preserved every ordering and the red set was
+  measured EMPTY until the mid-life magnitude was pinned.
+- ASSUMPTIONS A12 (Titan's rates are Titan's), DECISIONS D15/D16, SOURCES S3,
+  three new declined items.
+
+### Changed
+
+- Every absolute "no measurement in this repository" claim is re-scoped to the
+  geometry, which remains unanchored; D13 records the split.
+
 ## 1.0.0 --- 2026-09-02
 
 First release.

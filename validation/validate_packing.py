@@ -4,12 +4,15 @@
 Every point is one of three kinds, and the kind is the honest part:
 
 ``calibrated``
-    Pinned to a figure published outside this work. Here that means the textbook
-    closed forms for the k-ary n-cube. Read the first two declined items before
-    treating these as strong: a closed form is a mathematical identity about an
-    idealised topology, so agreement with it shows the code implements the model
-    and shows nothing at all about any real pod. **This repository has no
-    empirical anchor.**
+    Pinned to a figure published outside this work. Two anchors of very
+    different weight: the textbook closed forms for the k-ary n-cube, which are
+    identities about an idealised topology and show only that the code
+    implements the model --- and, since v1.1, the Titan GPU lifetime dataset
+    (Ostrouchov et al., SC '20), 30,207 real GPUs over 100,000 real GPU-years,
+    which anchors the *failure process* the hazard module reads. Read the first
+    two declined items before treating either as more than it is: **the
+    geometry here still has no empirical anchor; the failure history now
+    does.**
 ``emergent``
     An ordering, a regime boundary or a distribution that nothing in the code
     was tuned to produce. These are the points that can actually go red on a
@@ -28,6 +31,7 @@ from __future__ import annotations
 import math
 import random
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -55,6 +59,14 @@ from slicepacker.tenant import Domains, conflicts, isolation_cost, place_isolate
 from slicepacker.tenant import Policy as IsolationPolicy  # noqa: E402
 from slicepacker.tenant import violations  # noqa: E402
 from slicepacker.torus import SliceRect, Topology  # noqa: E402
+from slicepacker.hazard import (  # noqa: E402
+    age_hazard,
+    cohort_rates,
+    evict_or_ride,
+    hazard_threshold,
+    load_titan,
+    split_rank_recall,
+)
 
 SEED = 20260902
 #: Sample size for the randomised points. Sized so the whole registry runs in
@@ -85,12 +97,14 @@ class Point:
 
 
 DECLINED: Tuple[str, ...] = (
-    "No measured machine. Every number here is a model output. Nothing has been "
-    "compared against a real torus pod, a real scheduler, or a real failure.",
+    "No measured PACKING. Every geometry number here is a model output: nothing "
+    "has been compared against a real torus pod or a real scheduler. The one "
+    "measured thing is the FAILURE HISTORY the hazard module reads, and it "
+    "anchors failure rates only --- not one packing figure.",
     "The calibrated points pin textbook CLOSED FORMS, which are identities about "
     "an idealised k-ary n-cube. Agreeing with them shows this code implements the "
-    "model correctly. It is not evidence that the model describes any machine, and "
-    "this repository has no empirical anchor of any kind.",
+    "model correctly. It is not evidence that the model describes any machine. "
+    "The Titan points are the only cells anchored to a measured fleet.",
     "Only chip failures are modelled. A failed LINK breaks a ring without removing "
     "a chip, and every shrink computed here would miss it entirely.",
     "Routing is not modelled. Diameter and bisection are static graph properties; "
@@ -118,6 +132,18 @@ DECLINED: Tuple[str, ...] = (
     "Chip counts that are not products of pod-dividing factors have no rectangle at "
     "all. Such a job is reported unplaceable, when in practice it would be rounded "
     "up; the rounding waste is not modelled.",
+    "The paper's device-level figures --- first failures clustering near 2.8 years, "
+    "5,320 old-batch vs 127 new-batch events --- are NOT reproduced: they come from "
+    "a filtered time-between-failures analysis the per-GPU summary file cannot "
+    "express. The raw sums here (6,226 vs 141) show the same ~44x disparity, and "
+    "no point pretends the filtered and raw counts are the same number.",
+    "Titan's rates do not transfer. An air-cooled Cray XK7 with a known board "
+    "defect earns its own hazard curve; a liquid-cooled pod earns a different one. "
+    "What the Titan points pin is the SHAPE --- cohort beats fleet-uniform, position "
+    "in the cooling path is a covariate --- never a rate for any other machine.",
+    "The eviction inequality is one window, one chip: no salvage value, no repeated "
+    "decisions, no correlated failures. It prices a single preemption, not a fleet "
+    "replacement policy like the one Titan actually executed.",
 )
 
 
@@ -631,6 +657,129 @@ def point_an_impossible_request_refuses_rather_than_rounding() -> Point:
                  "are refused; nothing is silently rounded up")
 
 
+
+# -- the Titan anchor --------------------------------------------------------
+
+OSTROUCHOV = ("Ostrouchov, Maxwell, Ashraf, Engelmann, Shankar & Rogers, "
+              "'GPU Lifetimes on Titan Supercomputer: Survival Analysis and "
+              "Reliability', SC '20, ACM, 2020; data github.com/olcf/TitanGPULife, "
+              "DOI 10.13139/ORNLNCCS/1657202")
+
+_TITAN_PATH = Path(__file__).resolve().parent.parent / "data" / "titan_gc_summary_loc.csv"
+_titan_cache: List = []
+
+
+def _titan() -> Optional[List]:
+    """The fetched fleet, loaded once; None if the file is absent."""
+    if _titan_cache:
+        return _titan_cache[0]
+    try:
+        _titan_cache.append(load_titan(_TITAN_PATH))
+    except (FileNotFoundError, ValueError):
+        return None
+    return _titan_cache[0]
+
+
+def _titan_absent(name: str, kind: str) -> Point:
+    """A missing dataset is a red point, never a silent skip.
+
+    A registry that goes green because its anchor file vanished is lying with
+    a straight face. Run ``make data``.
+    """
+    ref = OSTROUCHOV if kind == CALIBRATED else "-"
+    return Point(name, kind, False,
+                 "data/titan_gc_summary_loc.csv is absent --- run `make data`; "
+                 "this point fails rather than skips because a green run must "
+                 "mean the anchor was actually measured", ref)
+
+
+def point_the_fetched_fleet_matches_the_papers_headline_exposure() -> Point:
+    fleet = _titan()
+    name = "the-fetched-fleet-matches-the-papers-headline-exposure"
+    if fleet is None:
+        return _titan_absent(name, CALIBRATED)
+    years = sum(g.years for g in fleet)
+    ok = len(fleet) == 30_207 and 100_000.0 < years < 101_000.0
+    return Point(
+        name, CALIBRATED, ok,
+        f"{len(fleet):,} GPUs and {years:,.0f} GPU-years against the paper's "
+        "'over 100,000 collective years' of operation on 30,207 summarised units",
+        OSTROUCHOV,
+    )
+
+
+def point_deaths_order_by_cage_as_the_cooling_path_predicts() -> Point:
+    fleet = _titan()
+    name = "deaths-order-by-cage-as-the-cooling-path-predicts"
+    if fleet is None:
+        return _titan_absent(name, CALIBRATED)
+    rates = cohort_rates((g for g in fleet if g.batch == "old"), key=lambda g: g.cage)
+    r0, r1, r2 = (rates[c].per_year for c in (0, 1, 2))
+    ok = r0 < r1 < r2 and r2 / r0 > 2.5
+    return Point(
+        name, CALIBRATED, ok,
+        f"old-batch deaths per GPU-year rise {r0:.4f} -> {r1:.4f} -> {r2:.4f} "
+        f"from the bottom of the airflow path to the top ({r2 / r0:.1f}x), the "
+        "ordering the paper attributes to cooling-air transport",
+        OSTROUCHOV,
+    )
+
+
+def point_old_batch_hazard_climbs_with_no_infant_mortality() -> Point:
+    fleet = _titan()
+    name = "old-batch-hazard-climbs-with-no-infant-mortality"
+    if fleet is None:
+        return _titan_absent(name, CALIBRATED)
+    old = [g for g in fleet if g.batch == "old"]
+    b = age_hazard(old, [(0, 365), (365, 730), (730, 1095), (1095, 1460)])
+    h = [x.per_year for x in b]
+    # The magnitude is pinned as well as the ordering: the file is fetched
+    # against a SHA-256, so 'about 0.12 deaths per GPU-year past year two' is
+    # a property of a fixed dataset, not a tunable. An exposure-accounting
+    # error that inflates every denominator preserves the ordering and is
+    # caught only here.
+    ok = (h[0] == min(h) and h[0] < h[1] < h[2] < h[3]
+          and h[2] > 10 * h[1] and 0.10 < h[2] < 0.14)
+    return Point(
+        name, CALIBRATED, ok,
+        f"deaths per GPU-year by year of life: {h[0]:.4f}, {h[1]:.4f}, "
+        f"{h[2]:.4f}, {h[3]:.4f} --- the first year is the safest and the "
+        "mid-life slope is the steep part, which is the paper's 'no bathtub "
+        "curve' finding reproduced from the raw file",
+        OSTROUCHOV,
+    )
+
+
+def point_ranking_by_cohort_hazard_beats_a_uniform_pick() -> Point:
+    fleet = _titan()
+    name = "ranking-by-cohort-hazard-beats-a-uniform-pick"
+    if fleet is None:
+        return _titan_absent(name, EMERGENT)
+    rr = split_rank_recall(fleet, budget_frac=0.3, seed=SEED)
+    ok = rr.lift > 1.5 and rr.eval_deaths > 1_000
+    return Point(
+        name, EMERGENT, ok,
+        f"cohort rates learned on half the fleet rank the other half: the top "
+        f"{rr.budget_frac * 100:.0f}% of held-out chips hold {rr.recall * 100:.0f}% "
+        f"of the {rr.eval_deaths:,} held-out deaths (lift {rr.lift:.2f}x); the "
+        "estimate never saw the chips it is judging",
+    )
+
+
+def point_the_eviction_inequality_flips_exactly_at_its_threshold() -> Point:
+    t = hazard_threshold(90.0, 256.0, 8192.0)
+    below = evict_or_ride(t * 0.99, 90.0, 256.0, 8192.0).action
+    above = evict_or_ride(t * 1.01, 90.0, 256.0, 8192.0).action
+    never = hazard_threshold(90.0, 8192.0, 8192.0)
+    ok = below == "ride" and above == "evict" and never == math.inf
+    return Point(
+        "the-eviction-inequality-flips-exactly-at-its-threshold",
+        SANITY, ok,
+        f"1% under the break-even hazard rides, 1% over evicts, and a planned "
+        "drain as dear as the unplanned rebuild has no finite threshold at all",
+    )
+
+
 REGISTRY: Tuple[Callable[[], Point], ...] = (
     point_diameter_matches_the_published_closed_form,
     point_bisection_matches_the_published_closed_form,
@@ -656,6 +805,11 @@ REGISTRY: Tuple[Callable[[], Point], ...] = (
     point_an_isolated_placement_has_no_violations,
     point_placement_never_wraps_across_the_seam,
     point_an_impossible_request_refuses_rather_than_rounding,
+    point_the_fetched_fleet_matches_the_papers_headline_exposure,
+    point_deaths_order_by_cage_as_the_cooling_path_predicts,
+    point_old_batch_hazard_climbs_with_no_infant_mortality,
+    point_ranking_by_cohort_hazard_beats_a_uniform_pick,
+    point_the_eviction_inequality_flips_exactly_at_its_threshold,
 )
 
 

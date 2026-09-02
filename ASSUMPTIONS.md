@@ -46,3 +46,10 @@ deadlock avoidance and the traffic pattern, none of which appear here.
 **A11 --- A tenant is a string.** There are no quotas, no fair-share, no
 accounting. `Request.priority` is carried and not yet used by any placement
 decision.
+
+**A12 --- Titan's hazard rates are Titan's.** The hazard module measures an
+air-cooled Cray XK7 fleet with a known board defect driving the old batch.
+What is assumed to transfer is the shape --- cohort hazard beats fleet-uniform
+hazard, and position in the cooling path is a covariate --- never a rate. Any
+figure from `slicepacker hazard` quoted for another machine is a misuse this
+file explicitly warns against.

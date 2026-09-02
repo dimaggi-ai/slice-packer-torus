@@ -1,10 +1,11 @@
 # Reproduction entry points. See README.md for what each target produces.
 PY := .venv/bin/python
 
-.PHONY: help venv test validate examples experiments smoke-test clean
+.PHONY: help venv data test validate examples experiments smoke-test clean
 
 help:
 	@echo "make venv        create the pinned virtual environment"
+	@echo "make data        fetch and SHA-verify the Titan GPU lifetime dataset"
 	@echo "make test        the test suite, including the mutation tests (~4 min)"
 	@echo "make validate    the validation registry and the list of what it declines"
 	@echo "make examples    run every example input through the CLI"
@@ -17,10 +18,13 @@ venv:
 	.venv/bin/pip install --quiet --upgrade pip
 	.venv/bin/pip install --quiet -e ".[dev]"
 
-test:
+data:
+	sh data/fetch_titan.sh
+
+test: data
 	PYTHONPATH=src:validation $(PY) -m pytest tests/ -q
 
-validate:
+validate: data
 	$(PY) validation/validate_packing.py
 
 examples:

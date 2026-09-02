@@ -281,6 +281,51 @@ def cmd_reconstitute(args: argparse.Namespace) -> int:
     return OK if result.verdict == "ACT" else REFUSED
 
 
+def cmd_hazard(args: argparse.Namespace) -> int:
+    """Cohort hazard from the Titan fleet, and what it justifies doing."""
+    from .hazard import (age_hazard, cohort_rates, evict_or_ride, load_titan,
+                         split_rank_recall)
+
+    try:
+        fleet = load_titan(args.data)
+    except FileNotFoundError:
+        raise Unreadable(f"{args.data} not found --- run `make data` first")
+
+    print(f"{len(fleet):,} GPUs, {sum(g.years for g in fleet):,.0f} GPU-years "
+          "(Ostrouchov et al., SC '20)")
+
+    rates = cohort_rates(fleet, key=lambda g: (g.batch, g.cage))
+    print("\ncohort (batch, cage)      deaths   GPU-years   per GPU-year")
+    for k in sorted(rates, key=lambda k: rates[k].per_year):
+        r = rates[k]
+        print(f"  {str(k):22s}  {r.deaths:6,}   {r.gpu_years:9,.0f}   {r.per_year:.4f}")
+    print("  cage is vertical position in the cooling path; the ordering is")
+    print("  the paper's cooling-air finding, reproduced from the raw file")
+
+    old = [g for g in fleet if g.batch == "old"]
+    print("\nold-batch hazard by age (no bathtub --- it climbs):")
+    for b in age_hazard(old, [(0, 365), (365, 730), (730, 1095), (1095, 1460)]):
+        bar = "#" * max(1, round(b.per_year * 300))
+        print(f"  year {int(b.lo_days // 365) + 1}: {b.per_year:.4f}/GPU-yr {bar}")
+
+    worst = max(r.per_year for r in rates.values())
+    v = evict_or_ride(worst, args.window_days, args.planned, args.unplanned)
+    print(f"\nevict-or-ride, worst cohort ({worst:.3f}/GPU-yr), "
+          f"{args.window_days:.0f}-day window:")
+    print(f"  planned drain {args.planned:,.0f} vs expected unplanned "
+          f"{v.ride_cost:,.0f} chip-hours -> {v.action.upper()}")
+    print(f"  break-even hazard {v.threshold_per_year:.3f}/GPU-yr; preemption pays only")
+    print("  when the planned drain is cheap relative to the unplanned rebuild")
+
+    rr = split_rank_recall(fleet, budget_frac=args.budget)
+    print(f"\nplacement instead: rank held-out chips by cohort hazard learned on the")
+    print(f"  other half; top {rr.budget_frac * 100:.0f}% of chips capture "
+          f"{rr.recall * 100:.0f}% of deaths (lift {rr.lift:.2f}x)")
+    print("  --- which is the mitigation Titan's operators actually shipped:")
+    print("  reliability-aware placement, not preemptive eviction")
+    return OK
+
+
 def cmd_example(args: argparse.Namespace) -> int:
     doc = dict(REFERENCE)
     pod = _pod(doc)
@@ -356,6 +401,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--allow-reshard", action="store_true")
     p.add_argument("--no-eviction", action="store_true")
     p.set_defaults(func=cmd_reconstitute)
+
+    p = sub.add_parser("hazard", help="cohort hazard from the Titan fleet, and what it justifies")
+    p.add_argument("data", nargs="?", default="data/titan_gc_summary_loc.csv",
+                   help="path to the fetched per-GPU summary (make data)")
+    p.add_argument("--window-days", type=float, default=90.0)
+    p.add_argument("--planned", type=float, default=2048.0,
+                   help="cost of a planned drain, chip-hours")
+    p.add_argument("--unplanned", type=float, default=8192.0,
+                   help="cost of an unplanned reconstitution, chip-hours")
+    p.add_argument("--budget", type=float, default=0.3,
+                   help="fraction of the fleet the ranking may take")
+    p.set_defaults(func=cmd_hazard)
 
     p = sub.add_parser("example", help="the reference scenario, end to end")
     p.set_defaults(func=cmd_example)
