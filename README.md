@@ -16,11 +16,13 @@ reports answer:
 | Can we recover automatically? | What does waiting for a human cost? |
 | Can tenants be isolated? | Which requests make isolation impossible? |
 
-Six models, a command line, and a validation registry that prints what it
-declines to check before it prints anything it does check.
+Six geometric models, one measured failure history, a command line, and a
+validation registry that prints what it declines to check before it prints
+anything it does check.
 
-**There is no measurement in this repository.** See [What this does not
-check](#what-this-does-not-check).
+**There is exactly one measurement in this repository** --- the Titan failure
+history the hazard model reads. The geometry has no empirical anchor. See
+[What this does not check](#what-this-does-not-check).
 
 ## Seven findings
 
@@ -134,11 +136,13 @@ wiring it to a scheduler.
 
 ## What this does not check
 
-The validation registry prints thirteen declined items above its results on
+The validation registry prints sixteen declined items above its results on
 every run. The first two matter most:
 
-> No measured machine. Every number here is a model output. Nothing has been
-> compared against a real torus pod, a real scheduler, or a real failure.
+> No measured **packing**. Every geometry number here is a model output:
+> nothing has been compared against a real torus pod or a real scheduler. The
+> one measured thing is the **failure history** the hazard module reads, and
+> it anchors failure rates only --- not one packing figure.
 
 > The calibrated points pin textbook **closed forms**, which are identities
 > about an idealised k-ary n-cube. Agreeing with them shows this code implements
