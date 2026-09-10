@@ -95,9 +95,10 @@ That makes position, not failure, the cost driver:
 
 Two exact results follow, and both are checked:
 
-- **The worst case is exactly `chips / 2`, for every rectangular shape.** The
-  worst chip sits at the centre of every axis, where each axis costs half. No
-  packing decision reduces it.
+- **The worst case is `chips / 2` when an axis has even extent.** At the centre
+  of an odd extent `d`, excluding the failed plane loses `(d+1)/(2d)` of
+  the slice along that axis. The cheapest axis wins: `3x3x3` loses 18/27,
+  not half. Shape choice therefore matters for odd-only rectangles too.
 - **The best case is `chips / longest axis`.** A long axis gives you a thin
   plane to sacrifice.
 

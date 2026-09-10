@@ -53,8 +53,9 @@ A corner costs one plane; the centre costs half the slice.
   centre    (8, 8, 8)            2,048    50.0%
 ```
 
-The worst case is **exactly half the slice for every shape**, so packing cannot
-buy it down. The best case is `chips / longest axis` --- which means the compact
+The worst case is **half the slice when a non-unit axis has even extent**.
+Odd-only shapes can lose more: a central failure in `3x3x3` loses 18 of 27 chips.
+The best case is `chips / longest axis` --- which means the compact
 shape that wins on diameter is the one with the *highest* typical failure cost.
 At 4,096 chips in a 64-ary pod, the compact `16x16x16` loses 256 chips to its
 cheapest failure and the flat `1x64x64` loses 64.

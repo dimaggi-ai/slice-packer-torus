@@ -1,0 +1,139 @@
+{
+  "schema_version": "dimaggi-evidence/v1",
+  "coverage_scope": "Consequential headline claims, governing assumptions and model limits. Not a catalog of helper constants or proof that citations are correct.",
+  "sources": {
+    "validation/validate_packing.py": {
+      "source_type": "model-assumption",
+      "location": "validation/validate_packing.py",
+      "version_date": "2026-09-10 closure working tree; SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "src/slicepacker/hazard.py": {
+      "source_type": "model-assumption",
+      "location": "src/slicepacker/hazard.py",
+      "version_date": "2026-09-10 closure working tree; SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "src/slicepacker/cordon.py": {
+      "source_type": "model-assumption",
+      "location": "src/slicepacker/cordon.py",
+      "version_date": "2026-09-10 closure working tree; SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "SOURCES.md": {
+      "source_type": "model-assumption",
+      "location": "SOURCES.md",
+      "version_date": "2026-09-10 closure working tree; SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "README.md": {
+      "source_type": "model-assumption",
+      "location": "README.md",
+      "version_date": "2026-09-10 closure working tree; SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "titan": {
+      "source_type": "public-dataset",
+      "location": "https://github.com/olcf/TitanGPULife",
+      "version_date": "SC2020 dataset; SHA-pinned by data/fetch_titan.sh",
+      "license_or_reuse": "Facts/aggregates with attribution only; Failure history only; source requests citation, no new raw-data redistribution or broad license assertion",
+      "scope": "Failure history only; source requests citation, no new raw-data redistribution or broad license assertion"
+    }
+  },
+  "inputs": [
+    {
+      "name": "hazard selection budget",
+      "unit": "fraction",
+      "evidence_class": "scenario",
+      "sources": [
+        "src/slicepacker/hazard.py"
+      ],
+      "transformation": "Eviction comparison budget; not operational threshold",
+      "uncertainty": "Deliberately hypothetical/operator policy; not an observed universal bound",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md"
+      ],
+      "value": 0.3,
+      "valid_bounds": [
+        0,
+        1
+      ]
+    }
+  ],
+  "results": [
+    {
+      "name": "geometry bound",
+      "unit": "claim",
+      "evidence_class": "derived",
+      "sources": [
+        "src/slicepacker/cordon.py"
+      ],
+      "transformation": "Cordon loss is half where an even extent provides that bound; odd-only 3x3x3 can lose 18/27",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md"
+      ],
+      "statement": "Cordon loss is half where an even extent provides that bound; odd-only 3x3x3 can lose 18/27"
+    },
+    {
+      "name": "hazard scope",
+      "unit": "claim",
+      "evidence_class": "external-observed",
+      "sources": [
+        "validation/validate_packing.py",
+        "titan"
+      ],
+      "transformation": "Titan external failure history anchors hazard only, not torus packing, modern accelerator failure or actual scheduler throughput",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md"
+      ],
+      "statement": "Titan external failure history anchors hazard only, not torus packing, modern accelerator failure or actual scheduler throughput"
+    },
+    {
+      "name": "geometry conservation",
+      "unit": "claim",
+      "evidence_class": "sanity-bound",
+      "sources": [
+        "validation/validate_packing.py"
+      ],
+      "transformation": "Rectangular placement/isolation is an idealized topology model with no empirical packing anchor",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md"
+      ],
+      "statement": "Rectangular placement/isolation is an idealized topology model with no empirical packing anchor"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "validation/validate_packing.py",
+      "sha256": "52bd903153d44c70ff4869cc363a8ce4ebe455bc6ca9967480e595c16b750094"
+    },
+    {
+      "path": "src/slicepacker/hazard.py",
+      "sha256": "4de7357b20a622212d0c200f0d4e8240884d92510fa492892c67c4218ac45b40"
+    },
+    {
+      "path": "src/slicepacker/cordon.py",
+      "sha256": "98205957c5817122d887a7889905f765620d7f4b7abeb442fac9f05ee97c1ddc"
+    },
+    {
+      "path": "SOURCES.md",
+      "sha256": "fe169012a892daf2845a392aea3468c8b6226d9b627dc2d981058908b3847dab"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b9667f46e5ceaf1cc0a868816923db5e47f0b99d0ffa6e8a9a509fcaa034ad2c"
+    }
+  ]
+}
