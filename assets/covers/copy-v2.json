@@ -1,0 +1,18 @@
+[
+  {
+    "repo": "slice-packer-torus",
+    "label": "AI INFRASTRUCTURE RESEARCH",
+    "title": [
+      "Free chips are not",
+      "usable capacity"
+    ],
+    "subtitle": [
+      "Geometric models of accelerator",
+      "placement, failures, and isolation."
+    ],
+    "fontSize": 58,
+    "background": "illustration-v2.png",
+    "output": ".",
+    "source_readme_commit": "801597a622119ce918ed240759cfc70d4c279d4c"
+  }
+]
