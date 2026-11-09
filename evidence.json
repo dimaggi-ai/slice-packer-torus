@@ -33,7 +33,7 @@
     "README.md": {
       "source_type": "model-assumption",
       "location": "README.md",
-      "version_date": "2026-09-10 closure working tree; SHA-256 bound below",
+      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section (compute-assurance-tasks#114), existing text unchanged; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -43,6 +43,48 @@
       "version_date": "SC2020 dataset; SHA-pinned by data/fetch_titan.sh",
       "license_or_reuse": "Facts/aggregates with attribution only; Failure history only; source requests citation, no new raw-data redistribution or broad license assertion",
       "scope": "Failure history only; source requests citation, no new raw-data redistribution or broad license assertion"
+    },
+    "src/slicepacker/ocs.py": {
+      "source_type": "model-assumption",
+      "location": "src/slicepacker/ocs.py",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "validation/validate_ocs.py": {
+      "source_type": "model-assumption",
+      "location": "validation/validate_ocs.py",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "experiments/ocs/compare.py": {
+      "source_type": "model-assumption",
+      "location": "experiments/ocs/compare.py",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "docs/ocs-cubes.md": {
+      "source_type": "model-assumption",
+      "location": "docs/ocs-cubes.md",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
+    },
+    "jouppi-tpuv4": {
+      "source_type": "primary-publication",
+      "location": "https://arxiv.org/abs/2304.01433",
+      "version_date": "ISCA 2023 (arXiv:2304.01433)",
+      "license_or_reuse": "Facts cited with attribution; no text or figures reproduced",
+      "scope": "TPU v4 structure only: 4x4x4 blocks, 64 blocks per pod, 48 OCSes, 136x136 switch with 128 ports in use. Not a source for any packing, failure or recovery number."
+    },
+    "gke-dynamic-slicing": {
+      "source_type": "vendor-specification",
+      "location": "https://docs.cloud.google.com/kubernetes-engine/docs/concepts/dynamic-slicing",
+      "version_date": "Read 2026-11-09",
+      "license_or_reuse": "Facts cited with attribution; no text reproduced",
+      "scope": "Super- and sub-slicing, sub-slice shapes and spare replacement as documented. Vendor speed-up figures (up to 5x start, up to 4.5x recovery) are cited only and are not inputs."
     }
   },
   "inputs": [
@@ -63,6 +105,70 @@
       "valid_bounds": [
         0,
         1
+      ]
+    },
+    {
+      "name": "ocs cube chips",
+      "unit": "chips",
+      "evidence_class": "external-observed",
+      "sources": [
+        "jouppi-tpuv4",
+        "gke-dynamic-slicing",
+        "src/slicepacker/ocs.py"
+      ],
+      "transformation": "Default cube geometry 4x4x4 = 64 chips, from the TPU v4 block; a parameter (OCSConfig.geometry)",
+      "uncertainty": "Other generations use other cube sizes; every OCS table moves with it",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "value": 64,
+      "valid_bounds": [
+        1,
+        4096
+      ]
+    },
+    {
+      "name": "ocs usable ports",
+      "unit": "ports per switch",
+      "evidence_class": "external-observed",
+      "sources": [
+        "jouppi-tpuv4",
+        "src/slicepacker/ocs.py"
+      ],
+      "transformation": "128 of 136 ports in use; each cube takes a + and a - port per switch, so one domain holds ports/2 cubes",
+      "uncertainty": "Current hardware may differ; the experiment also reports 64 and 32 ports and uses 136 for the spare-cube case",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "value": 128,
+      "valid_bounds": [
+        2,
+        136
+      ]
+    },
+    {
+      "name": "ocs max cubes per axis",
+      "unit": "cubes",
+      "evidence_class": "scenario",
+      "sources": [
+        "src/slicepacker/ocs.py",
+        "docs/ocs-cubes.md"
+      ],
+      "transformation": "Super-slice shape cap chosen to match the static pod's 16-chip axes; stands in for GKE's shape list, which is not modelled",
+      "uncertainty": "Deliberately hypothetical; the cap alone moves the cube-aligned gap from 0% to 2-10%",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "value": 4,
+      "valid_bounds": [
+        1,
+        64
       ]
     }
   ],
@@ -112,6 +218,95 @@
         "README.md"
       ],
       "statement": "Rectangular placement/isolation is an idealized topology model with no empirical packing anchor"
+    },
+    {
+      "name": "ocs cube-aligned gap",
+      "unit": "claim",
+      "evidence_class": "simulated",
+      "sources": [
+        "src/slicepacker/ocs.py",
+        "validation/validate_ocs.py",
+        "experiments/ocs/compare.py"
+      ],
+      "transformation": "On matched seeds, OCS with any cube shape leaves 0% of free chips unusable for cube-aligned jobs at 10-85% occupancy, also after a matched third of jobs depart; the static torus leaves 8.0-32.3% (43.3% after departures)",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "statement": "On matched seeds, OCS with any cube shape leaves 0% of free chips unusable for cube-aligned jobs at 10-85% occupancy, also after a matched third of jobs depart; the static torus leaves 8.0-32.3% (43.3% after departures)"
+    },
+    {
+      "name": "ocs no-benefit cases",
+      "unit": "claim",
+      "evidence_class": "simulated",
+      "sources": [
+        "src/slicepacker/ocs.py",
+        "validation/validate_ocs.py",
+        "experiments/ocs/compare.py"
+      ],
+      "transformation": "The gap returns under OCS with a 4-cubes-per-axis cap (1.7-10.4%), with sub-cube jobs (up to 5.4% with any shape) and with port limits (52.8% at 32 ports, 40% occupancy); sizes that are not whole cubes are refused",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "statement": "The gap returns under OCS with a 4-cubes-per-axis cap (1.7-10.4%), with sub-cube jobs (up to 5.4% with any shape) and with port limits (52.8% at 32 ports, 40% occupancy); sizes that are not whole cubes are refused"
+    },
+    {
+      "name": "ocs spare-cube recovery",
+      "unit": "claim",
+      "evidence_class": "simulated",
+      "sources": [
+        "src/slicepacker/ocs.py",
+        "validation/validate_ocs.py",
+        "experiments/ocs/compare.py"
+      ],
+      "transformation": "With a spare cube in the domain one chip failure costs a 4,096-chip slice 0 chips at every location (static 256-2,048) and costs the pod one 64-chip cube; borrowing a spare succeeded for 30 of 40 failures at 95% occupancy, reserving two cubes for 40 of 40",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "statement": "With a spare cube in the domain one chip failure costs a 4,096-chip slice 0 chips at every location (static 256-2,048) and costs the pod one 64-chip cube; borrowing a spare succeeded for 30 of 40 failures at 95% occupancy, reserving two cubes for 40 of 40"
+    },
+    {
+      "name": "ocs ring derivation",
+      "unit": "claim",
+      "evidence_class": "derived",
+      "sources": [
+        "src/slicepacker/ocs.py",
+        "validation/validate_ocs.py"
+      ],
+      "transformation": "A stitched slice has a ring on an axis only where a closing circuit is configured on every line; the chip graph is built from the circuit list and its diameter matches the k-ary n-cube closed forms",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "statement": "A stitched slice has a ring on an axis only where a closing circuit is configured on every line; the chip graph is built from the circuit list and its diameter matches the k-ary n-cube closed forms"
+    },
+    {
+      "name": "ocs scope",
+      "unit": "claim",
+      "evidence_class": "sanity-bound",
+      "sources": [
+        "validation/validate_ocs.py",
+        "gke-dynamic-slicing",
+        "docs/ocs-cubes.md"
+      ],
+      "transformation": "The OCS model is unmeasured: no real pod, OCS or slice controller; no time, switch, fibre or link failure; Google's up-to-5x start and up-to-4.5x recovery figures are vendor claims, not inputs, and are not checked",
+      "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
+      "affected_outputs": [
+        "published conclusion",
+        "README.md",
+        "docs/ocs-cubes.md"
+      ],
+      "statement": "The OCS model is unmeasured: no real pod, OCS or slice controller; no time, switch, fibre or link failure; Google's up-to-5x start and up-to-4.5x recovery figures are vendor claims, not inputs, and are not checked"
     }
   ],
   "artifacts": [
@@ -133,7 +328,23 @@
     },
     {
       "path": "README.md",
-      "sha256": "b9667f46e5ceaf1cc0a868816923db5e47f0b99d0ffa6e8a9a509fcaa034ad2c"
+      "sha256": "8150f3e633dabbea4f3a60f3189e24f8c6f6528db91659cc705ec65f1ae5b99a"
+    },
+    {
+      "path": "src/slicepacker/ocs.py",
+      "sha256": "f3a8467293586d66c172fa13cf265d155ceb42021664cdb223c59b4d7c5e3932"
+    },
+    {
+      "path": "validation/validate_ocs.py",
+      "sha256": "aa74211578fd835e3ddd9cd4a60d257f00264638005d31d4bbe471bc96b76d78"
+    },
+    {
+      "path": "experiments/ocs/compare.py",
+      "sha256": "c38481669f90678ccbdff1e421f5b2746bfd743826aef39e4c42ad419ccc8b9b"
+    },
+    {
+      "path": "docs/ocs-cubes.md",
+      "sha256": "a82b242a042702bc9a673a9ce0bd4182a7b1c790ed48c5663fa17e2e20297b1e"
     }
   ]
 }
