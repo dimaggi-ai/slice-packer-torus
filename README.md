@@ -177,6 +177,35 @@ make examples      # 24 examples, each pinned to its exit code
 make experiments   # the three figures quoted above; each exits 1 if it stops holding
 ```
 
+## Optical cube stitching (unreleased)
+
+Everything above assumes one static torus. `ocs` models the other design: a
+pod of 4x4x4 cubes joined by optical circuit switches, as in TPU v4 (Jouppi et
+al., ISCA 2023) and GKE dynamic slicing. It is compared with the static torus
+on matched pods, arrivals, failures and seeds. `docs/ocs-cubes.md` has the
+model, every table and its limits.
+
+- **For cube-aligned jobs the free-chip gap goes to zero** when any cube shape
+  is allowed (static: 8--32%), and every stitched slice gets a ring on all
+  three axes (static: none of 372 placed slices).
+- **It comes back** with a shape menu (2--10% at 4 cubes per axis), with
+  sub-cube jobs (up to 5.4%), and with port limits (52.8% at 32 ports). Sizes
+  that are not whole cubes are refused: from a 96--640-chip workload the capped
+  pod admitted nothing.
+- **A spare cube makes one chip failure cost the job nothing anywhere**
+  (static: 256--2,048 chips). The cost moves to the pod: one cube per failure,
+  and borrowing a spare failed for 10 of 40 failures at 95% occupancy.
+
+Google's "up to 5x faster" start and "up to 4.5x faster" recovery are vendor
+claims, not inputs; this model has no time and cannot check them. The OCS
+registry is separate, so the 29 points above and their output are unchanged.
+
+```bash
+PYTHONPATH=src:validation python validation/validate_ocs.py    # 16 points, 9 declined items
+PYTHONPATH=src:validation python -m pytest tests/test_ocs.py   # 18 tests and 9 mutations
+PYTHONPATH=src python experiments/ocs/compare.py               # every table; exits 1 if a headline fails
+```
+
 ## Reading order
 
 - `DECISIONS.md` --- sixteen choices, what each bought and cost. Six were

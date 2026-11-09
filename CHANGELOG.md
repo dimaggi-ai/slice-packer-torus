@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased
+
+A second fabric: cubes joined by optical circuit switches, compared with the
+static torus on matched seeds. Nothing existing changes.
+
+### Added
+
+- `ocs` --- a pod of cubes (default 4x4x4) stitched by optical circuit
+  switches: super-slices of whole cubes, sub-slices inside one cube, a port
+  limit that splits the pod into domains, a shape cap, and borrow or reserve
+  spare-cube policies with swap, re-stitch and cordon recovery. A ring exists
+  only where a closing circuit is configured; the chip graph is built from the
+  circuit list and its diameter checked against the closed forms.
+- `experiments/ocs/compare.py` --- the three static experiments rerun for both
+  fabrics on matched seeds, plus the cases where cubes do not help: sub-cube
+  jobs, sizes that are not whole cubes, shape caps, port limits and spare cost.
+  Exits 1 if any of eleven headlines stops holding.
+- `validation/validate_ocs.py` --- a separate registry: 16 points (2
+  calibrated to Jouppi et al., ISCA 2023 and Dally 1990, 9 emergent, 5 sanity)
+  and 9 declined items, including that Google's 5x and 4.5x figures are vendor
+  claims and not inputs.
+- `tests/test_ocs.py` --- 18 tests and 9 measured mutations. One asserts a blind
+  spot: no point measures sub-cube utilisation. The adjacency mutation first
+  measured an empty red set; the gap point now releases a matched third of
+  jobs before measuring.
+- `docs/ocs-cubes.md` and an additive README section.
+
 ## 1.1.0 --- 2026-09-02
 
 The repository gains its first measurement, and the boundary around it.
