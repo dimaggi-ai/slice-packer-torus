@@ -208,6 +208,12 @@ PYTHONPATH=src python experiments/ocs/compare.py              # ~3 min; --quick 
 `compare.py --json PATH` writes every table as JSON. It exits 1 if a headline
 stops holding.
 
+Make targets: `make validate` runs this registry after the static one,
+`make test` collects `tests/test_ocs.py`, `make ocs-smoke` runs
+`compare.py --quick` (12 trials instead of 60, ~40 s), and
+`make experiments-ocs` runs the full comparison. CI runs the registry and the
+quick comparison; the full run stays local.
+
 ## For the reviewer
 
 Review the assumptions before the numbers: the cube size, the port limit and

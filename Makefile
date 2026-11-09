@@ -1,16 +1,18 @@
 # Reproduction entry points. See README.md for what each target produces.
 PY := .venv/bin/python
 
-.PHONY: help venv data test validate examples experiments smoke-test clean
+.PHONY: help venv data test validate examples experiments experiments-ocs ocs-smoke smoke-test clean
 
 help:
 	@echo "make venv        create the pinned virtual environment"
 	@echo "make data        fetch and SHA-verify the Titan GPU lifetime dataset"
 	@echo "make test        the test suite, including the mutation tests (~4 min)"
-	@echo "make validate    the validation registry and the list of what it declines"
+	@echo "make validate    both validation registries (static and OCS) and what each declines"
 	@echo "make examples    run every example input through the CLI"
 	@echo "make experiments the three figures the README quotes"
-	@echo "make smoke-test  tests, registry and examples (~5 min)"
+	@echo "make experiments-ocs  the full OCS vs static comparison (~3 min)"
+	@echo "make ocs-smoke   the OCS comparison with reduced trials (~40 s)"
+	@echo "make smoke-test  tests, both registries, examples and the OCS smoke run (~6 min)"
 	@echo "make clean       remove build artifacts"
 
 venv:
@@ -26,6 +28,7 @@ test: data
 
 validate: data
 	$(PY) validation/validate_packing.py
+	PYTHONPATH=src:validation $(PY) validation/validate_ocs.py
 
 examples:
 	$(PY) examples/run_examples.py
@@ -35,7 +38,13 @@ experiments:
 	PYTHONPATH=src $(PY) experiments/fragmentation_curve.py
 	PYTHONPATH=src $(PY) experiments/isolation_cost.py
 
-smoke-test: test validate examples
+experiments-ocs:
+	PYTHONPATH=src $(PY) experiments/ocs/compare.py
+
+ocs-smoke:
+	PYTHONPATH=src $(PY) experiments/ocs/compare.py --quick
+
+smoke-test: test validate examples ocs-smoke
 
 clean:
 	rm -rf build dist src/*.egg-info .pytest_cache

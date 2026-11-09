@@ -172,7 +172,7 @@ had been passing on machinery that was no longer there.
 ```bash
 make data          # fetch + SHA-verify the Titan dataset (once; ~4 MB)
 make test          # 104 unit tests and 22 mutation tests (~5 min: each mutation reruns the registry)
-make validate      # 29 registry points and 16 declined items
+make validate      # 29 registry points and 16 declined items, then the OCS registry (16 points, 9 declined)
 make examples      # 24 examples, each pinned to its exit code
 make experiments   # the three figures quoted above; each exits 1 if it stops holding
 ```
@@ -205,6 +205,10 @@ PYTHONPATH=src:validation python validation/validate_ocs.py    # 16 points, 9 de
 PYTHONPATH=src:validation python -m pytest tests/test_ocs.py   # 18 tests and 9 mutations
 PYTHONPATH=src python experiments/ocs/compare.py               # every table; exits 1 if a headline fails
 ```
+
+`make validate` and CI run the OCS registry; `make test` collects `tests/test_ocs.py`;
+`make ocs-smoke` (and CI) run the comparison with reduced trials (~40 s);
+`make experiments-ocs` runs the full comparison (~3 min), which CI does not.
 
 ## Reading order
 

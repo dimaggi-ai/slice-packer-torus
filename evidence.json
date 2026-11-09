@@ -33,7 +33,7 @@
     "README.md": {
       "source_type": "model-assumption",
       "location": "README.md",
-      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section (compute-assurance-tasks#114), existing text unchanged; SHA-256 bound below",
+      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114), existing claims unchanged; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -68,7 +68,7 @@
     "docs/ocs-cubes.md": {
       "source_type": "model-assumption",
       "location": "docs/ocs-cubes.md",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -328,7 +328,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "8150f3e633dabbea4f3a60f3189e24f8c6f6528db91659cc705ec65f1ae5b99a"
+      "sha256": "7b93d3bb4f4aec8f7ff09be97aad00f310a2ccc3f5a0aa93b2867b93ca7530d1"
     },
     {
       "path": "src/slicepacker/ocs.py",
@@ -344,7 +344,7 @@
     },
     {
       "path": "docs/ocs-cubes.md",
-      "sha256": "a82b242a042702bc9a673a9ce0bd4182a7b1c790ed48c5663fa17e2e20297b1e"
+      "sha256": "d5e98e0012d663dd102f689d0968a0719ecaf42bdf766d568a4c558c345e5f78"
     }
   ]
 }

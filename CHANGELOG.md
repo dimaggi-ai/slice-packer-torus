@@ -26,6 +26,16 @@ static torus on matched seeds. Nothing existing changes.
   measured an empty red set; the gap point now releases a matched third of
   jobs before measuring.
 - `docs/ocs-cubes.md` and an additive README section.
+- `make ocs-smoke` (the comparison with reduced trials, ~40 s) and
+  `make experiments-ocs` (the full comparison, ~3 min).
+
+### Changed
+
+- `make validate` also runs the OCS registry; `make smoke-test` also runs
+  `ocs-smoke`. CI gains two steps in the existing style: the OCS registry and
+  the reduced-trial comparison. No new actions or network destinations.
+- `evidence.json` rebinds README.md and docs/ocs-cubes.md, whose text
+  changed for these targets.
 
 ## 1.1.0 --- 2026-09-02
 
