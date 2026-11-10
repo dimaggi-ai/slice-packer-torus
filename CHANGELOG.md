@@ -36,6 +36,13 @@ static torus on matched seeds. Nothing existing changes.
   the reduced-trial comparison. No new actions or network destinations.
 - `evidence.json` rebinds README.md and docs/ocs-cubes.md, whose text
   changed for these targets.
+- README finding 3, `docs/the-models.md` section 3, the paper's abstract and
+  conclusion, and DECISIONS D2 now say the failure-cost figures (256--2,048
+  chips by location for `16x16x16`) assume a face-pull-only shrink with no
+  seam crossing (ASSUMPTIONS A2). A slice that spans a whole ring could
+  instead re-form through the wraparound for 256 chips anywhere, at the cost
+  of one ring (`slicepacker.seam`, `docs/ocs-cubes.md` section 2). This edits
+  existing README text. No code, number or output changes.
 
 ### Fixed (assurance findings on the OCS mode, 2026-11-09)
 

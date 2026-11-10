@@ -42,8 +42,17 @@ three-dimensional torus, and every slice lost at least one ring. The wraparound 
 ```
 
 **3. One chip failure costs between 6% and 50% of a slice, depending on where
-it was.** Getting back to a rectangle means pulling a face in past the failure.
-A corner costs one plane; the centre costs half the slice.
+it was** --- when the slice must stay a rectangle in absolute coordinates.
+Getting back to a rectangle then means pulling a face in past the failure. A
+corner costs one plane; the centre costs half the slice.
+
+These figures assume a face-pull-only shrink with no seam crossing (ASSUMPTIONS
+A2, DECISIONS D2). They are a property of that rule, not of torus hardware. A
+slice that spans a whole ring, like the `16x16x16` below, can instead drop the
+failed plane and re-form through the wraparound: it loses 256 chips at any
+location, at the cost of that axis's ring. A slice that does not own a whole
+ring has no seam to cross, and the figures stand for it. See
+`docs/ocs-cubes.md` (section 2) and `src/slicepacker/seam.py`.
 
 ```
   where     coordinate      chips lost    share
@@ -53,7 +62,8 @@ A corner costs one plane; the centre costs half the slice.
   centre    (8, 8, 8)            2,048    50.0%
 ```
 
-The worst case is **half the slice when a non-unit axis has even extent**.
+Under the face-pull rule, the worst case is **half the slice when a non-unit
+axis has even extent**.
 Odd-only shapes can lose more: a central failure in `3x3x3` loses 18 of 27 chips.
 The best case is `chips / longest axis` --- which means the compact
 shape that wins on diameter is the one with the *highest* typical failure cost.
