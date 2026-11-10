@@ -12,7 +12,7 @@ import pytest
 
 from slicepacker.cordon import cheapest_shrink
 from slicepacker.ocs import OCSConfig, OCSPod, SubSlice, StitchedSlice, stitch_circuits
-from slicepacker.packing import Fabric, Request
+from slicepacker.packing import Fabric, NoPlacement, Request
 from slicepacker.torus import SliceRect, Topology
 
 
@@ -232,3 +232,53 @@ def test_seam_fabric_bitmasks_match_the_brute_force(extents, wrap):
         for shape in ((2,) + (1,) * (len(extents) - 1), (1,) * len(extents)):
             slow = next((rr.origin for rr in fab.positions(shape) if fab.is_free(rr)), None)
             assert fab._first_origin(shape) == slow
+
+
+# -- CTO review of PR #1 (2026-11-10): reserve spares stay in their domain ------
+
+
+def test_reserve_swap_takes_the_spare_of_the_failed_cubes_domain():
+    """Two domains of 32 cubes, two spares each. Fill domain 0, so the next job
+    lands in domain 1, then fail one of its cubes. The swap must take domain
+    1's spare (62), not domain 0's (30), which no circuit can reach."""
+    pod = OCSPod(64, OCSConfig(ocs_ports=64), spares=2, spare_policy="reserve")
+    assert pod.spare_pool == [30, 31, 62, 63]
+    for name, chips in (("a", 1024), ("b", 512), ("c", 256), ("d", 128)):
+        assert {pod.domain(c) for c in pod.place(name, chips).cubes} == {0}
+    victim = pod.place("v", 512)
+    assert {pod.domain(c) for c in victim.cubes} == {1}
+    failed = victim.cubes[0]
+    assert pod.swap_target("v", failed) == 62
+    assert pod.recover("v", failed, (0, 0, 0)).swap_cube == 62
+    swapped = pod.apply_swap("v", failed, (0, 0, 0))
+    assert {pod.domain(c) for c in swapped.cubes} == {1}
+    assert pod.spare_pool == [30, 31, 63]
+    pod.port_usage()  # raises if any circuit crosses a domain
+
+
+def test_reserve_swap_is_refused_when_only_another_domain_has_a_spare():
+    pod = OCSPod(64, OCSConfig(ocs_ports=64), spares=1, spare_policy="reserve")
+    assert pod.spare_pool == [31, 63]
+    first = pod.place("a", 512)
+    assert {pod.domain(c) for c in first.cubes} == {0}
+    pod.apply_swap("a", first.cubes[0], (0, 0, 0))
+    assert pod.spare_pool == [63]
+    # domain 0 has used its spare; domain 1's spare is out of reach
+    rec = pod.recover("a", pod.stitched["a"].cubes[1], (0, 0, 0))
+    assert rec.swap_cube is None and not rec.can_swap
+    with pytest.raises(NoPlacement):
+        pod.apply_swap("a", pod.stitched["a"].cubes[1], (0, 0, 0))
+
+
+# -- CTO review: the shape cap is clamped to the domain size ---------------------
+
+
+def test_cube_shapes_never_exceed_the_limit_passed_in():
+    """No caller inside the model passes more cubes than ``limit``, so the
+    clamp changes nothing there. Called directly, ``limit`` still bounds every
+    axis: 4 cubes in a 2-cube limit have (1, 2, 2) and not (1, 1, 4)."""
+    pod = OCSPod(64, OCSConfig(max_cubes_per_axis=4))
+    shapes = pod.cube_shapes(4, 2)
+    assert shapes and all(max(s) <= 2 for s in shapes)
+    assert pod.cube_shapes(3, 2) == ()
+
