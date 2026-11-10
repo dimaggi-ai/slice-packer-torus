@@ -282,3 +282,25 @@ def test_cube_shapes_never_exceed_the_limit_passed_in():
     assert shapes and all(max(s) <= 2 for s in shapes)
     assert pod.cube_shapes(3, 2) == ()
 
+
+# -- CTO review: a sub-cube slice has no failure path, and says so ---------------
+
+
+def test_recover_refuses_a_sub_cube_job_by_name():
+    pod = OCSPod(4)
+    small = pod.place("small", 32)
+    with pytest.raises(ValueError, match="sub-cube slice"):
+        pod.recover("small", small.cube, (0, 0, 0))
+
+
+def test_apply_swap_refuses_a_sub_cube_job_and_changes_nothing():
+    pod = OCSPod(4)
+    small = pod.place("small", 32)
+    with pytest.raises(ValueError, match="sub-cube slice"):
+        pod.apply_swap("small", small.cube, (0, 0, 0))
+    assert pod.unhealthy == {} and pod.sub["small"] == small
+
+
+def test_recover_on_an_unknown_job_is_still_a_key_error():
+    with pytest.raises(KeyError):
+        OCSPod(4).recover("nobody", 0, (0, 0, 0))
