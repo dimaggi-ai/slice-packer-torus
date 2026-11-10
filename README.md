@@ -172,7 +172,7 @@ had been passing on machinery that was no longer there.
 ```bash
 make data          # fetch + SHA-verify the Titan dataset (once; ~4 MB)
 make test          # 104 unit tests and 22 mutation tests (~5 min: each mutation reruns the registry)
-make validate      # 29 registry points and 16 declined items, then the OCS registry (16 points, 9 declined)
+make validate      # 29 registry points and 16 declined items, then the OCS registry (18 points, 11 declined)
 make examples      # 24 examples, each pinned to its exit code
 make experiments   # the three figures quoted above; each exits 1 if it stops holding
 ```
@@ -186,29 +186,38 @@ on matched pods, arrivals, failures and seeds. `docs/ocs-cubes.md` has the
 model, every table and its limits.
 
 - **For cube-aligned jobs the free-chip gap goes to zero** when any cube shape
-  is allowed (static: 8--32%), and every stitched slice gets a ring on all
-  three axes (static: none of 372 placed slices).
+  is allowed (static: 8--32%; 7--28% if the static torus may place across its
+  seam), and every stitched slice gets a ring on all three axes (static: none
+  of 372 placed slices). The zero is true by construction: any free cube count
+  can be stitched, so it measures the rule, not an advantage found by search.
+  Each fabric fills toward the same target and the reached occupancy is
+  reported beside it; at 70--85% the OCS pods are 2--6 points fuller.
 - **It comes back** with a shape menu (2--10% at 4 cubes per axis), with
   sub-cube jobs (up to 5.4%), and with port limits (52.8% at 32 ports). Sizes
   that are not whole cubes are refused: from a 96--640-chip workload the capped
   pod admitted nothing.
-- **A spare cube makes one chip failure cost the job nothing anywhere**
-  (static: 256--2,048 chips). The cost moves to the pod: one cube per failure,
-  and borrowing a spare failed for 10 of 40 failures at 95% occupancy.
+- **A spare cube makes one chip failure cost the job nothing anywhere**, on
+  more hardware: a 65th cube and 136 rather than 128 ports per switch, with no
+  static spare modelled. Static loses 256--2,048 chips if its slab may not cross
+  the seam of a ring (assumption A2, as above), 256 everywhere if it may. The
+  cost moves to the pod: one cube per failure, and borrowing a spare failed for
+  10 of 40 failures at 95% occupancy.
+- **Without a spare, cubes beat only the no-seam torus** (worst case 1,024
+  against 2,048). With seam-crossing on both, both lose 256 everywhere.
 
 Google's "up to 5x faster" start and "up to 4.5x faster" recovery are vendor
 claims, not inputs; this model has no time and cannot check them. The OCS
 registry is separate, so the 29 points above and their output are unchanged.
 
 ```bash
-PYTHONPATH=src:validation python validation/validate_ocs.py    # 16 points, 9 declined items
-PYTHONPATH=src:validation python -m pytest tests/test_ocs.py   # 18 tests and 9 mutations
+PYTHONPATH=src:validation python validation/validate_ocs.py    # 18 points, 11 declined items
+PYTHONPATH=src:validation python -m pytest tests/test_ocs.py tests/test_ocs_assurance.py   # 37 tests and 12 mutations
 PYTHONPATH=src python experiments/ocs/compare.py               # every table; exits 1 if a headline fails
 ```
 
 `make validate` and CI run the OCS registry; `make test` collects `tests/test_ocs.py`;
-`make ocs-smoke` (and CI) run the comparison with reduced trials (~40 s);
-`make experiments-ocs` runs the full comparison (~3 min), which CI does not.
+`make ocs-smoke` (and CI) run the comparison with reduced trials (~45 s);
+`make experiments-ocs` runs the full comparison (~4 min), which CI does not.
 
 ## Reading order
 

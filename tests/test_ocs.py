@@ -288,33 +288,65 @@ def test_sub_slices_never_share_a_cube(monkeypatch):
     assert red_set() == MEASURED["no_sharing"]
 
 
+def test_spares_held_pod_wide_not_per_domain(monkeypatch):
+    """Assurance finding A3, reverted: the last N cubes of the whole pod."""
+    monkeypatch.setattr(
+        ocs_mod.OCSPod, "_reserve_spares",
+        lambda self: list(range(self.n_cubes - self.spares, self.n_cubes)))
+    assert red_set() == MEASURED["pod_wide_spares"]
+
+
+def test_copy_refills_a_used_pool(monkeypatch):
+    """Assurance finding A4, reverted: copy() treats an empty pool as unset."""
+    def refill(self):
+        return ocs_mod.OCSPod(self.n_cubes, self.config, self.spares, self.spare_policy,
+                              dict(self.stitched), dict(self.sub),
+                              {k: set(v) for k, v in self.unhealthy.items()},
+                              list(self.spare_pool) or None)
+    monkeypatch.setattr(ocs_mod.OCSPod, "copy", refill)
+    assert red_set() == MEASURED["copy_refills"]
+
+
+def test_no_seam_crossing(monkeypatch):
+    """Assurance finding A1, reverted: the seam option never wins."""
+    import slicepacker.seam as seam_mod
+    monkeypatch.setattr(seam_mod, "seam_shrinks", lambda rect, failed, wraps: ())
+    assert red_set() == MEASURED["no_seam"]
+
+
 #: Every set below came out of a run, not a prediction. One surprise is
 #: recorded in validate_ocs.py: the adjacency mutation first measured EMPTY,
 #: because first-fit with no departures leaves free cubes consecutive; the gap
 #: point now releases a matched third of the jobs before it measures.
 MEASURED = {
     "assume_wraps": {"a-stitched-slice-is-the-textbook-torus-or-mesh"},
+    # Without closing circuits a stitched slice has no seam to cross, so the
+    # seam-crossing parity with the torus is lost too (measured 2026-11-09).
     "never_close": {
         "a-stitched-slice-is-the-textbook-torus-or-mesh",
         "stitched-slices-get-the-rings-static-slices-do-not",
         "the-default-pod-has-the-tpu-v4-switch-arithmetic",
+        "without-a-spare-cubes-only-beat-a-torus-that-cannot-cross-its-seam",
     },
     "no_domains": {
         "a-port-limit-caps-the-largest-job",
         "no-port-carries-two-circuits",
+        "reserved-spares-are-per-domain",
         "stitching-never-crosses-a-domain",
     },
     "no_swap": {
-        "a-spare-cube-makes-failure-cost-location-independent",
+        "a-copy-keeps-used-spares-used",
+        "a-spare-cube-makes-one-failure-cost-nothing",
         "a-swap-keeps-the-shape-and-drops-the-failed-cube",
+        "reserved-spares-are-per-domain",
         "spares-are-paid-for-either-way",
     },
-    "no_restitch": {"without-a-spare-cubes-halve-the-worst-case"},
+    "no_restitch": {"without-a-spare-cubes-only-beat-a-torus-that-cannot-cross-its-seam"},
     "adjacent_only": {"cubes-remove-the-gap-for-cube-aligned-jobs"},
     "no_cap": {
         "a-shape-menu-brings-a-gap-back",
         "sizes-that-are-not-whole-cubes-are-refused",
-        "without-a-spare-cubes-halve-the-worst-case",
+        "without-a-spare-cubes-only-beat-a-torus-that-cannot-cross-its-seam",
     },
     "stitch_shared": {
         "no-cube-is-held-twice",
@@ -323,4 +355,11 @@ MEASURED = {
     },
     # the blind spot: nothing measures how well small jobs share cubes
     "no_sharing": set(),
+    # assurance findings A3, A4 and A1, each reverted on its own
+    "pod_wide_spares": {"reserved-spares-are-per-domain"},
+    "copy_refills": {"a-copy-keeps-used-spares-used"},
+    "no_seam": {
+        "a-spare-cube-makes-one-failure-cost-nothing",
+        "without-a-spare-cubes-only-beat-a-torus-that-cannot-cross-its-seam",
+    },
 }

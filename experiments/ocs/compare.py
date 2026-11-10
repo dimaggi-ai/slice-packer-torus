@@ -17,6 +17,13 @@ Four comparisons, each including the cases where cubes do not help:
 3. diameter and ring inheritance of the slices actually placed;
 4. what an OCS port limit does to the largest job and to the gap.
 
+Two static baselines (assurance finding A1, 2026-11-09): ``static`` is the
+repository's model, which never places or re-forms a slice across the seam of
+a ring (ASSUMPTIONS A2); ``static, seam-crossing`` may (:mod:`slicepacker.seam`).
+Fill loops stop at the first refusal, so a target occupancy is not the
+occupancy reached: every row reports the chips actually admitted and their
+share of the pod (finding A5).
+
 Usage: ``PYTHONPATH=src python experiments/ocs/compare.py [--json PATH] [--quick]``.
 Exits 1 if a headline stops holding. Synthetic throughout: no vendor figure is
 an input.
@@ -36,6 +43,7 @@ from slicepacker.cordon import cheapest_shrink  # noqa: E402
 from slicepacker.embed import reembed_same_shape  # noqa: E402
 from slicepacker.ocs import OCSConfig, OCSPod  # noqa: E402
 from slicepacker.packing import Fabric, NoPlacement, Request, candidate_shapes  # noqa: E402
+from slicepacker.seam import SeamFabric, cheapest_shrink_across_seam  # noqa: E402
 from slicepacker.torus import SliceRect, Topology  # noqa: E402
 
 SEED = 20261109
@@ -56,8 +64,9 @@ def sequence(workload: str, target: float, trial: int, n: int = 400) -> List[int
     return [r.choice(WORKLOADS[workload]) for _ in range(n)]
 
 
-def fill_static(seq: List[int], target: float) -> Tuple[Fabric, int, List[str]]:
-    fab, refused, placed = Fabric(STATIC), 0, []
+def fill_static(seq: List[int], target: float,
+                fabric=Fabric) -> Tuple[Fabric, int, List[str]]:
+    fab, refused, placed = fabric(STATIC), 0, []
     for i, chips in enumerate(seq):
         if fab.allocated_chips() >= target * STATIC.chips:
             break
@@ -103,8 +112,9 @@ def gap_table(workload: str, trials: int, modes) -> Dict[str, List[dict]]:
         for t in range(trials):
             seq = sequence(workload, target, t)
             for name, make in modes:
-                if make is None:
-                    fab, refused, _ = fill_static(seq, target)
+                if make is None or make == "seam":
+                    fab, refused, _ = fill_static(
+                        seq, target, Fabric if make is None else SeamFabric)
                     free, place, adm = (fab.free_chips(), fab.largest_placeable(),
                                         fab.allocated_chips())
                 else:
@@ -124,6 +134,7 @@ def gap_table(workload: str, trials: int, modes) -> Dict[str, List[dict]]:
                 occupancy=target, free=round(free, 1), placeable=round(place, 1),
                 overstated=round(1 - place / free, 4) if free else 0.0,
                 admitted=round(a["admitted"] / trials, 1),
+                admitted_share=round(a["admitted"] / trials / STATIC.chips, 4),
                 refused=a["refused"], gapped=a["gapped"], trials=trials))
     return out
 
@@ -131,13 +142,13 @@ def gap_table(workload: str, trials: int, modes) -> Dict[str, List[dict]]:
 def print_gap(workload: str, table: Dict[str, List[dict]]) -> None:
     print(f"\n[{workload}] sizes {WORKLOADS[workload]}")
     names = list(table)
-    print(f"  {'occupancy':>9}" + "".join(f"{n:>22}" for n in names))
-    print(f"  {'':>9}" + "".join(f"{'admitted  overstated':>22}" for _ in names))
+    print(f"  {'target':>7}" + "".join(f"{n:>24}" for n in names))
+    print(f"  {'':>7}" + "".join(f"{'reached  overstated':>24}" for _ in names))
     for i, target in enumerate(OCCUPANCIES):
-        row = f"  {int(target * 100):>8}%"
+        row = f"  {int(target * 100):>6}%"
         for n in names:
             r = table[n][i]
-            row += f"{r['admitted']:>12,.0f}{r['overstated'] * 100:>9.1f}%"
+            row += f"{r['admitted_share'] * 100:>13.1f}%{r['overstated'] * 100:>9.1f}%"
         print(row)
     refused = {n: sum(r["refused"] for r in table[n]) for n in names}
     if any(refused.values()):
@@ -164,6 +175,12 @@ def gap_after_departures(trials: int, modes) -> Dict[str, dict]:
                 for j in leaving:
                     fab.release(j)
                 free, place = fab.free_chips(), fab.largest_placeable()
+            elif make == "seam":
+                sfab, _, _ = fill_static(seq, 0.85, SeamFabric)
+                for j in leaving:
+                    if j in sfab.allocations:
+                        sfab.release(j)
+                free, place = sfab.free_chips(), sfab.largest_placeable()
             else:
                 pod2, _, _ = fill_ocs(seq, 0.85, make())
                 for j in leaving:
@@ -193,6 +210,7 @@ def failure_by_location() -> List[dict]:
     rect = SliceRect((0, 0, 0), (16, 16, 16))
     for label, coord in LOCATIONS:
         static_lost = cheapest_shrink(rect, coord).chips_lost
+        static_seam = cheapest_shrink_across_seam(rect, coord, rect.wraps_in(STATIC))
         # OCS: the same slice, 4x4x4 cubes, plus one spare cube in the domain.
         # A 65th cube needs two more ports on every switch: 128 usable ports
         # serve 64 cubes, so the spare case uses all 136 physical Palomar ports
@@ -209,7 +227,12 @@ def failure_by_location() -> List[dict]:
         s2 = no_spare.place("big", 4096)
         rec2 = no_spare.recover("big", s2.cube_at(cube_pos), local)
         how, lost = rec2.best_without_spare()
+        rec3 = no_spare.recover("big", s2.cube_at(cube_pos), local, seam_crossing=True)
+        how3, lost3 = rec3.best_without_spare()
         rows.append(dict(location=label, coord=coord, static_lost=static_lost,
+                         static_lost_seam=static_seam.chips_lost,
+                         static_seam_how=static_seam.kind,
+                         no_spare_how_seam=how3, no_spare_lost_seam=lost3,
                          swap_lost=rec.best()[1] if rec.can_swap else None,
                          swap_spare_cubes=1 if rec.can_swap else 0,
                          stranded_on_swap=rec.stranded_on_swap,
@@ -265,7 +288,10 @@ def recovery_by_occupancy(trials: int) -> List[dict]:
                          ocs_borrow_swap=bor_ok, ocs_reserve2_swap=res_ok,
                          static_admitted=round(st_admitted / max(n, 1)),
                          borrow_admitted=round(bor_admitted / max(n, 1)),
-                         reserve2_admitted=round(res_admitted / max(n, 1))))
+                         reserve2_admitted=round(res_admitted / max(n, 1)),
+                         static_share=round(st_admitted / max(n, 1) / STATIC.chips, 4),
+                         borrow_share=round(bor_admitted / max(n, 1) / STATIC.chips, 4),
+                         reserve2_share=round(res_admitted / max(n, 1) / STATIC.chips, 4)))
     return rows
 
 
@@ -345,7 +371,8 @@ def main(argv: List[str]) -> int:
     print(f"seed {SEED}, {trials} matched arrival sequences per occupancy")
     print("'admitted' = chips placed; 'overstated' = 1 - placeable/free, averaged")
 
-    modes = [("static", None), ("ocs cap 4/axis", lambda: ocs_pod(cap=4)),
+    modes = [("static", None), ("static, seam-crossing", "seam"),
+             ("ocs cap 4/axis", lambda: ocs_pod(cap=4)),
              ("ocs any shape", lambda: ocs_pod(cap=None))]
     gaps = {w: gap_table(w, trials, modes) for w in WORKLOADS}
     for w, table in gaps.items():
@@ -354,29 +381,34 @@ def main(argv: List[str]) -> int:
     churn = gap_after_departures(trials, modes)
     print("\n[cube-aligned, filled to 85% then a matched third released]")
     for n, r in churn.items():
-        print(f"  {n:<16} free {r['free']:>7,.0f}  placeable {r['placeable']:>7,.0f}"
+        print(f"  {n:<22} free {r['free']:>7,.0f}  placeable {r['placeable']:>7,.0f}"
               f"  overstated {r['overstated'] * 100:5.1f}%  gap in {r['gapped']}/{r['trials']}")
 
-    print("\none chip fails in a 4,096-chip 16x16x16 slice")
-    print(f"  {'where':<9}{'static':>8}{'ocs+spare':>11}{'ocs, no spare':>24}")
+    print("\none chip fails in a 4,096-chip 16x16x16 slice: chips lost")
+    print(f"  {'':<9}{'no seam-crossing':>34}{'seam-crossing':>30}")
+    print(f"  {'where':<9}{'static':>8}{'ocs, no spare':>26}{'static':>10}{'ocs, no spare':>20}"
+          f"{'ocs+spare':>11}")
     fail = failure_by_location()
     for r in fail:
         swap = "-" if r["swap_lost"] is None else f"{r['swap_lost']:,}"
-        print(f"  {r['location']:<9}{r['static_lost']:>8,}{swap:>11}"
-              f"{r['no_spare_lost']:>12,} ({r['no_spare_how']})")
-    print("  ocs+spare consumes 1 cube (64 chips) of pod capacity per failure; "
+        print(f"  {r['location']:<9}{r['static_lost']:>8,}"
+              f"{r['no_spare_lost']:>14,} ({r['no_spare_how']:<8})"
+              f"{r['static_lost_seam']:>12,}{r['no_spare_lost_seam']:>10,} ({r['no_spare_how_seam']:<8})"
+              f"{swap:>9}")
+    print("  ocs+spare runs on a 65th cube and 136 rather than 128 ports per switch, and")
+    print("  consumes 1 cube (64 chips) of pod capacity per failure; "
           f"{fail[0]['stranded_on_swap']} healthy chips idle until repair")
 
     rec_trials = 10 if quick else 40
     print("\ncheckpoint-preserving recovery exists (matched failures)")
     rec = recovery_by_occupancy(rec_trials)
-    print(f"  {'occupancy':>9}{'static move':>13}{'ocs swap':>10}{'ocs 2 spares':>14}"
-          f"{'admitted s/b/r':>22}")
+    print(f"  {'target':>7}{'static move':>13}{'ocs swap':>10}{'ocs 2 spares':>14}"
+          f"{'reached s / b / r':>26}")
     for r in rec:
-        print(f"  {int(r['occupancy'] * 100):>8}%{r['static_move']:>8}/{r['failures']:<4}"
+        print(f"  {int(r['occupancy'] * 100):>6}%{r['static_move']:>8}/{r['failures']:<4}"
               f"{r['ocs_borrow_swap']:>5}/{r['failures']:<4}{r['ocs_reserve2_swap']:>8}/"
-              f"{r['failures']:<4}  {r['static_admitted']:>6,}/{r['borrow_admitted']:,}/"
-              f"{r['reserve2_admitted']:,}")
+              f"{r['failures']:<4}  {r['static_share'] * 100:>6.1f}% / "
+              f"{r['borrow_share'] * 100:.1f}% / {r['reserve2_share'] * 100:.1f}%")
 
     ring_trials = 10 if quick else 30
     rings = rings_and_diameter(ring_trials)
@@ -403,6 +435,8 @@ def main(argv: List[str]) -> int:
     checks = {
         "static overstates capacity on cube-aligned jobs":
             max(r["overstated"] for r in aligned["static"]) >= 0.05,
+        "seam-crossing static still overstates capacity on cube-aligned jobs":
+            max(r["overstated"] for r in aligned["static, seam-crossing"]) >= 0.05,
         "OCS with any cube shape removes the gap on cube-aligned jobs":
             all(r["overstated"] == 0 for r in aligned["ocs any shape"]),
         "after departures, any-shape OCS still has no gap; static does":
@@ -412,10 +446,12 @@ def main(argv: List[str]) -> int:
         "off-cube sizes are refused by OCS and placed by static":
             sum(r["refused"] for r in gaps["off-cube"]["ocs any shape"]) > 0
             and sum(r["refused"] for r in gaps["off-cube"]["static"]) == 0,
-        "with a spare, failure cost is zero everywhere (location-independent)":
+        "with a spare cube (a 65th cube, 136 ports), failure cost is zero everywhere":
             all(r["swap_lost"] == 0 for r in fail),
-        "without a spare, OCS caps the worst case below static":
+        "no seam-crossing only: without a spare, OCS caps the worst case below static":
             max(r["no_spare_lost"] for r in fail) < max(r["static_lost"] for r in fail),
+        "seam-crossing on both: without a spare, OCS and static lose the same":
+            all(r["no_spare_lost_seam"] == r["static_lost_seam"] for r in fail),
         "OCS slices get closed rings; static slices mostly do not":
             rings["ocs"]["wrap_dims"][3] > 0 and rings["static"]["wrap_dims"][3] == 0,
         "no closing circuit, no ring":

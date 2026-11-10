@@ -10,8 +10,8 @@ help:
 	@echo "make validate    both validation registries (static and OCS) and what each declines"
 	@echo "make examples    run every example input through the CLI"
 	@echo "make experiments the three figures the README quotes"
-	@echo "make experiments-ocs  the full OCS vs static comparison (~3 min)"
-	@echo "make ocs-smoke   the OCS comparison with reduced trials (~40 s)"
+	@echo "make experiments-ocs  the full OCS vs static comparison (~4 min)"
+	@echo "make ocs-smoke   the OCS comparison with reduced trials (~45 s)"
 	@echo "make smoke-test  tests, both registries, examples and the OCS smoke run (~6 min)"
 	@echo "make clean       remove build artifacts"
 

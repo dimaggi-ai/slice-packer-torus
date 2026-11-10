@@ -33,7 +33,7 @@
     "README.md": {
       "source_type": "model-assumption",
       "location": "README.md",
-      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114), existing claims unchanged; SHA-256 bound below",
+      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114), existing claims unchanged; 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -47,28 +47,28 @@
     "src/slicepacker/ocs.py": {
       "source_type": "model-assumption",
       "location": "src/slicepacker/ocs.py",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
     "validation/validate_ocs.py": {
       "source_type": "model-assumption",
       "location": "validation/validate_ocs.py",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
     "experiments/ocs/compare.py": {
       "source_type": "model-assumption",
       "location": "experiments/ocs/compare.py",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
     "docs/ocs-cubes.md": {
       "source_type": "model-assumption",
       "location": "docs/ocs-cubes.md",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -85,6 +85,13 @@
       "version_date": "Read 2026-11-09",
       "license_or_reuse": "Facts cited with attribution; no text reproduced",
       "scope": "Super- and sub-slicing, sub-slice shapes and spare replacement as documented. Vendor speed-up figures (up to 5x start, up to 4.5x recovery) are cited only and are not inputs."
+    },
+    "src/slicepacker/seam.py": {
+      "source_type": "model-assumption",
+      "location": "src/slicepacker/seam.py",
+      "version_date": "2026-11-09 seam-crossing static baseline, assurance finding A1 (compute-assurance-tasks#114); SHA-256 bound below",
+      "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
+      "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     }
   },
   "inputs": [
@@ -226,16 +233,17 @@
       "sources": [
         "src/slicepacker/ocs.py",
         "validation/validate_ocs.py",
-        "experiments/ocs/compare.py"
+        "experiments/ocs/compare.py",
+        "src/slicepacker/seam.py"
       ],
-      "transformation": "On matched seeds, OCS with any cube shape leaves 0% of free chips unusable for cube-aligned jobs at 10-85% occupancy, also after a matched third of jobs depart; the static torus leaves 8.0-32.3% (43.3% after departures)",
+      "transformation": "On matched seeds, OCS with any cube shape leaves 0% of free chips unusable for cube-aligned jobs at 10-85% target occupancy, also after a matched third of jobs depart; this is true by construction (any free cube count can be stitched). The static torus leaves 8.0%-32.3% (43.3% after departures); a static torus that may place across the seam leaves 7.2%-28.1% (35.2% after departures). Reached occupancy is reported beside each target",
       "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
       "affected_outputs": [
         "published conclusion",
         "README.md",
         "docs/ocs-cubes.md"
       ],
-      "statement": "On matched seeds, OCS with any cube shape leaves 0% of free chips unusable for cube-aligned jobs at 10-85% occupancy, also after a matched third of jobs depart; the static torus leaves 8.0-32.3% (43.3% after departures)"
+      "statement": "On matched seeds, OCS with any cube shape leaves 0% of free chips unusable for cube-aligned jobs at 10-85% target occupancy, also after a matched third of jobs depart; this is true by construction (any free cube count can be stitched). The static torus leaves 8.0%-32.3% (43.3% after departures); a static torus that may place across the seam leaves 7.2%-28.1% (35.2% after departures). Reached occupancy is reported beside each target"
     },
     {
       "name": "ocs no-benefit cases",
@@ -246,14 +254,14 @@
         "validation/validate_ocs.py",
         "experiments/ocs/compare.py"
       ],
-      "transformation": "The gap returns under OCS with a 4-cubes-per-axis cap (1.7-10.4%), with sub-cube jobs (up to 5.4% with any shape) and with port limits (52.8% at 32 ports, 40% occupancy); sizes that are not whole cubes are refused",
+      "transformation": "The gap returns under OCS with a 4-cubes-per-axis cap (1.7%-10.4%), with sub-cube jobs (up to 5.4% with any shape) and with port limits (52.8% at 32 ports, 40% occupancy); sizes that are not whole cubes are refused, and no benefit is claimed from that workload",
       "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
       "affected_outputs": [
         "published conclusion",
         "README.md",
         "docs/ocs-cubes.md"
       ],
-      "statement": "The gap returns under OCS with a 4-cubes-per-axis cap (1.7-10.4%), with sub-cube jobs (up to 5.4% with any shape) and with port limits (52.8% at 32 ports, 40% occupancy); sizes that are not whole cubes are refused"
+      "statement": "The gap returns under OCS with a 4-cubes-per-axis cap (1.7%-10.4%), with sub-cube jobs (up to 5.4% with any shape) and with port limits (52.8% at 32 ports, 40% occupancy); sizes that are not whole cubes are refused, and no benefit is claimed from that workload"
     },
     {
       "name": "ocs spare-cube recovery",
@@ -262,16 +270,17 @@
       "sources": [
         "src/slicepacker/ocs.py",
         "validation/validate_ocs.py",
-        "experiments/ocs/compare.py"
+        "experiments/ocs/compare.py",
+        "src/slicepacker/seam.py"
       ],
-      "transformation": "With a spare cube in the domain one chip failure costs a 4,096-chip slice 0 chips at every location (static 256-2,048) and costs the pod one 64-chip cube; borrowing a spare succeeded for 30 of 40 failures at 95% occupancy, reserving two cubes for 40 of 40",
+      "transformation": "With a spare cube (a 65th cube and 136 rather than 128 switch ports; no static spare modelled) one chip failure costs a 4,096-chip slice 0 chips at every location, against static 256-2,048 without seam-crossing (assumption A2) and 256 everywhere with it, and costs the pod one 64-chip cube. Without a spare, OCS loses 256-1,024 and beats only the no-seam baseline; with seam-crossing on both, both lose 256 everywhere. Borrowing a spare succeeded for 30 of 40 failures at 95% target occupancy, reserving two cubes per domain for 40 of 40",
       "uncertainty": "Scope and qualifications stated in transformation and linked source; no unreported confidence interval",
       "affected_outputs": [
         "published conclusion",
         "README.md",
         "docs/ocs-cubes.md"
       ],
-      "statement": "With a spare cube in the domain one chip failure costs a 4,096-chip slice 0 chips at every location (static 256-2,048) and costs the pod one 64-chip cube; borrowing a spare succeeded for 30 of 40 failures at 95% occupancy, reserving two cubes for 40 of 40"
+      "statement": "With a spare cube (a 65th cube and 136 rather than 128 switch ports; no static spare modelled) one chip failure costs a 4,096-chip slice 0 chips at every location, against static 256-2,048 without seam-crossing (assumption A2) and 256 everywhere with it, and costs the pod one 64-chip cube. Without a spare, OCS loses 256-1,024 and beats only the no-seam baseline; with seam-crossing on both, both lose 256 everywhere. Borrowing a spare succeeded for 30 of 40 failures at 95% target occupancy, reserving two cubes per domain for 40 of 40"
     },
     {
       "name": "ocs ring derivation",
@@ -328,23 +337,27 @@
     },
     {
       "path": "README.md",
-      "sha256": "7b93d3bb4f4aec8f7ff09be97aad00f310a2ccc3f5a0aa93b2867b93ca7530d1"
+      "sha256": "05e793023777db9ba0c39a687a7ae54039698c5067c097a6b86d303779ce3c64"
     },
     {
       "path": "src/slicepacker/ocs.py",
-      "sha256": "f3a8467293586d66c172fa13cf265d155ceb42021664cdb223c59b4d7c5e3932"
+      "sha256": "82669d8755afcc00fb2183d17b705206e74b59f82b90d201282946c92ab78979"
     },
     {
       "path": "validation/validate_ocs.py",
-      "sha256": "aa74211578fd835e3ddd9cd4a60d257f00264638005d31d4bbe471bc96b76d78"
+      "sha256": "8ad73e98181478e9c5263cb73d6e4dfd1ddedf2cfdc5dcd5143f2342ed6d936b"
     },
     {
       "path": "experiments/ocs/compare.py",
-      "sha256": "c38481669f90678ccbdff1e421f5b2746bfd743826aef39e4c42ad419ccc8b9b"
+      "sha256": "98d992659ab5d22b3e88f7902be790df6ff8f19179a3616448769cd5f15ca703"
     },
     {
       "path": "docs/ocs-cubes.md",
-      "sha256": "d5e98e0012d663dd102f689d0968a0719ecaf42bdf766d568a4c558c345e5f78"
+      "sha256": "3c695d7ccb055ba2b6b1ab41f8d3a14735ed5fa310adc7ae2fbc780f553a59af"
+    },
+    {
+      "path": "src/slicepacker/seam.py",
+      "sha256": "0212e52daa95100659dc2a42acfd2f087faf76744374d501487c5915444093c5"
     }
   ]
 }

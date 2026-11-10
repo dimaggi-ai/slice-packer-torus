@@ -33,6 +33,7 @@ from slicepacker.ocs import (  # noqa: E402
     stitched_graph,
 )
 from slicepacker.packing import Fabric, NoPlacement, Request, candidate_shapes  # noqa: E402
+from slicepacker.seam import cheapest_shrink_across_seam  # noqa: E402
 from slicepacker.torus import SliceRect, Topology  # noqa: E402
 
 SEED = 20261109
@@ -72,6 +73,14 @@ DECLINED: Tuple[str, ...] = (
     "departures are one matched release of a third of the jobs in the gap "
     "point; there is no arrival process or job lifetime --- the static model's "
     "declined items on time and first-fit placement apply unchanged.",
+    "The spare-cube case runs on more hardware than the static pod: a 65th cube "
+    "and all 136 Palomar ports (the 8 the paper keeps for testing and repair). "
+    "No static spare is modelled; a static torus has no cube to swap in. Its "
+    "zero is a cost moved into hardware, not removed.",
+    "The static registry's cordon and placement never cross the seam of a ring "
+    "(ASSUMPTIONS A2). The failure points here report both that baseline and a "
+    "seam-crossing one (slicepacker.seam); the gap points use the first only, and "
+    "experiments/ocs/compare.py measures the second.",
 )
 
 
@@ -234,10 +243,13 @@ def point_sizes_that_are_not_whole_cubes_are_refused() -> Point:
 
 
 def _location_rows():
+    """Per location: static, OCS with a spare, OCS bare --- then the same two
+    without a spare when either fabric may cross its seam."""
     rect = SliceRect((0, 0, 0), (16, 16, 16))
     out = []
     for coord in ((0, 0, 0), (0, 0, 8), (0, 8, 8), (4, 8, 8), (8, 8, 8)):
         static = cheapest_shrink(rect, coord).chips_lost
+        static_seam = cheapest_shrink_across_seam(rect, coord, rect.wraps_in(STATIC)).chips_lost
         spare = OCSPod(65, OCSConfig(ocs_ports=136), spares=1, spare_policy="reserve")
         s = spare.place("big", 4096)
         pos, local = tuple(c // 4 for c in coord), tuple(c % 4 for c in coord)
@@ -245,33 +257,49 @@ def _location_rows():
         bare = OCSPod(64, OCSConfig())
         s2 = bare.place("big", 4096)
         rec2 = bare.recover("big", s2.cube_at(pos), local)
+        rec3 = bare.recover("big", s2.cube_at(pos), local, seam_crossing=True)
         out.append((static, rec.best()[1] if rec.can_swap else None,
-                    rec2.best_without_spare()[1]))
+                    rec2.best_without_spare()[1], static_seam,
+                    rec3.best_without_spare()[1]))
     return out
 
 
-def point_a_spare_cube_makes_failure_cost_location_independent() -> Point:
+def point_a_spare_cube_makes_one_failure_cost_nothing() -> Point:
+    """Restated after assurance finding A1. It was 'a spare cube makes failure
+    cost location-independent'; a torus that may cross its seam is
+    location-independent too (one plane, 256 chips), so that is not the
+    difference. The difference is zero against one plane, bought with a 65th
+    cube and 8 more ports per switch."""
     rows = _location_rows()
     static = [r[0] for r in rows]
     swap = [r[1] for r in rows]
-    ok = all(s == 0 for s in swap) and max(static) >= 8 * min(static)
+    seam = [r[3] for r in rows]
+    ok = (all(s == 0 for s in swap) and max(static) >= 8 * min(static)
+          and len(set(seam)) == 1 and seam[0] > 0)
     return Point(
-        "a-spare-cube-makes-failure-cost-location-independent", EMERGENT, ok,
-        f"one chip fails in a 16x16x16 slice at five locations: static loses "
-        f"{static} chips, OCS with one spare cube in the domain loses {swap} --- "
-        "the price moves to one cube of pod capacity per failure")
+        "a-spare-cube-makes-one-failure-cost-nothing", EMERGENT, ok,
+        f"one chip fails in a 16x16x16 slice at five locations: OCS with one spare "
+        f"cube loses {swap}; static loses {static} if it may not cross its seam and "
+        f"{seam} if it may --- the spare costs a 65th cube and 136 rather than 128 "
+        "ports per switch, and one cube of capacity per failure")
 
 
-def point_without_a_spare_cubes_halve_the_worst_case() -> Point:
+def point_without_a_spare_cubes_only_beat_a_torus_that_cannot_cross_its_seam() -> Point:
+    """Restated after assurance finding A1. It was 'without a spare, cubes halve
+    the worst case'; that holds only against the no-seam static cordon."""
     rows = _location_rows()
     static = [r[0] for r in rows]
     bare = [r[2] for r in rows]
-    ok = max(bare) * 2 == max(static) and min(bare) == min(static)
+    static_seam = [r[3] for r in rows]
+    bare_seam = [r[4] for r in rows]
+    ok = (max(bare) * 2 == max(static) and min(bare) == min(static)
+          and bare_seam == static_seam and len(set(static_seam)) == 1)
     return Point(
-        "without-a-spare-cubes-halve-the-worst-case", EMERGENT, ok,
-        f"no spare: OCS loses {bare} against static {static}; dropping one cube layer "
-        "and re-stitching caps the worst case at a quarter of the slice, while a "
-        "corner failure costs exactly what it costs the static torus")
+        "without-a-spare-cubes-only-beat-a-torus-that-cannot-cross-its-seam", EMERGENT, ok,
+        f"no spare: OCS loses {bare} against static {static} when neither crosses "
+        f"its seam (re-stitching caps the worst case at a quarter of the slice); "
+        f"when both may, OCS loses {bare_seam} and static {static_seam} --- no "
+        "difference")
 
 
 def point_stitched_slices_get_the_rings_static_slices_do_not() -> Point:
@@ -414,6 +442,38 @@ def point_a_swap_keeps_the_shape_and_drops_the_failed_cube() -> Point:
                  "cube is out of it and unusable, and the spare pool is one smaller")
 
 
+def point_reserved_spares_are_per_domain() -> Point:
+    """Assurance finding A3: a swap never leaves its domain, so every domain
+    needs its own spares. Two domains (64 ports), two spares each."""
+    pod = OCSPod(64, OCSConfig(ocs_ports=64), spares=2, spare_policy="reserve")
+    held = [sum(c in pod.spare_pool for c in d) for d in pod.domains()]
+    swaps = []
+    for d, members in enumerate(pod.domains()):
+        trial = pod.copy()
+        free = [c for c in members if trial.is_whole_free(c)][:8]
+        trial.stitched[f"d{d}"] = StitchedSlice(
+            f"d{d}", (2, 2, 2), tuple(free),
+            stitch_circuits((2, 2, 2), free, close_rings=True), trial.config.geometry)
+        swaps.append(trial.recover(f"d{d}", free[0], (0, 0, 0)).can_swap)
+    ok = held == [2, 2] and all(swaps)
+    return Point("reserved-spares-are-per-domain", SANITY, ok,
+                 f"64 cubes, 64 ports, 2 spares: spares held per domain {held}; a "
+                 f"failure in each domain finds a swap {swaps}")
+
+
+def point_a_copy_keeps_used_spares_used() -> Point:
+    """Assurance finding A4: an emptied pool is a state, not a default."""
+    pod = OCSPod(64, OCSConfig(), spares=1, spare_policy="reserve")
+    s = pod.place("a", 1024)
+    pod.apply_swap("a", s.cubes[0], (0, 0, 0))
+    twin = pod.copy()
+    ok = pod.spare_pool == [] and twin.spare_pool == [] and not twin.recover(
+        "a", twin.stitched["a"].cubes[1], (0, 0, 0)).can_swap
+    return Point("a-copy-keeps-used-spares-used", SANITY, ok,
+                 f"after the only spare is used, the pod holds {pod.spare_pool} and "
+                 f"its copy holds {twin.spare_pool}")
+
+
 def point_ocs_accounting_adds_up() -> Point:
     bad = 0
     for pod in _random_pods():
@@ -437,8 +497,8 @@ REGISTRY = (
     point_a_shape_menu_brings_a_gap_back,
     point_sub_cube_jobs_bring_a_gap_back,
     point_sizes_that_are_not_whole_cubes_are_refused,
-    point_a_spare_cube_makes_failure_cost_location_independent,
-    point_without_a_spare_cubes_halve_the_worst_case,
+    point_a_spare_cube_makes_one_failure_cost_nothing,
+    point_without_a_spare_cubes_only_beat_a_torus_that_cannot_cross_its_seam,
     point_stitched_slices_get_the_rings_static_slices_do_not,
     point_a_port_limit_caps_the_largest_job,
     point_spares_are_paid_for_either_way,
@@ -446,6 +506,8 @@ REGISTRY = (
     point_no_port_carries_two_circuits,
     point_stitching_never_crosses_a_domain,
     point_a_swap_keeps_the_shape_and_drops_the_failed_cube,
+    point_reserved_spares_are_per_domain,
+    point_a_copy_keeps_used_spares_used,
     point_ocs_accounting_adds_up,
 )
 

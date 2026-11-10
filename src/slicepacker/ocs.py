@@ -50,6 +50,7 @@ from typing import Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
 
 from .cordon import cheapest_shrink
 from .packing import Fabric, NoPlacement, Request, candidate_shapes
+from .seam import cheapest_shrink_across_seam
 from .torus import Coord, SliceRect, Topology
 
 #: One bundle of fibres: on ``axis``, the ``+`` face of cube ``src`` is
@@ -302,8 +303,11 @@ class OCSPod:
     sub: Dict[str, SubSlice] = field(default_factory=dict)
     #: Per cube, the chips inside it that are out of service.
     unhealthy: Dict[int, Set[Coord]] = field(default_factory=dict)
-    #: Cubes held for swaps (reserve policy). Filled in __post_init__.
-    spare_pool: List[int] = field(default_factory=list)
+    #: Cubes held for swaps (reserve policy). ``None`` means "fill it in":
+    #: __post_init__ then reserves ``spares`` cubes in every domain. An empty
+    #: list is a pool that has been used up, and stays empty (a copy of a pod
+    #: whose spares are gone has no spares either).
+    spare_pool: Optional[List[int]] = None
 
     def __post_init__(self) -> None:
         if self.n_cubes < 1:
@@ -312,10 +316,25 @@ class OCSPod:
             raise ValueError("spare_policy must be 'borrow' or 'reserve'")
         if self.spares < 0 or self.spares >= self.n_cubes:
             raise ValueError("spares must be at least 0 and fewer than the cubes")
-        if self.spare_policy == "reserve" and not self.spare_pool:
-            self.spare_pool = list(range(self.n_cubes - self.spares, self.n_cubes))
         if self.spare_policy == "borrow" and self.spares:
             raise ValueError("the borrow policy holds no cubes back; spares must be 0")
+        if self.spare_policy == "reserve" and self.spares >= min(
+                len(d) for d in self.domains()):
+            raise ValueError("spares are held in every domain, so each domain needs "
+                             "more cubes than spares")
+        if self.spare_pool is None:
+            self.spare_pool = (self._reserve_spares() if self.spare_policy == "reserve"
+                               else [])
+
+    def _reserve_spares(self) -> List[int]:
+        """The last ``spares`` cubes of every domain.
+
+        A swap never leaves its domain, so a spare is useful only to the domain
+        that holds it. Reserving the last cubes of the whole pod instead left
+        every domain but the last with none (assurance finding A3).
+        """
+        return [c for members in self.domains() for c in members[-self.spares:]] \
+            if self.spares else []
 
     # -- structure -----------------------------------------------------------
 
@@ -542,7 +561,8 @@ class OCSPod:
         free = [c for c in self.domains()[d] if self.is_whole_free(c)]
         return free[0] if free else None
 
-    def recover(self, job_id: str, failed_cube: int, local: Coord) -> "Recovery":
+    def recover(self, job_id: str, failed_cube: int, local: Coord, *,
+                seam_crossing: bool = False) -> "Recovery":
         """Every way back for a stitched slice after one chip dies.
 
         ``swap``: replace the whole failed cube with a healthy one and re-stitch
@@ -552,6 +572,12 @@ class OCSPod:
         cube --- rings re-closed, shape changed.
         ``cordon``: the static answer, pulling a chip face in on the stitched
         rectangle --- location-dependent, and the axis it shrinks loses its ring.
+
+        ``seam_crossing=True`` also lets the cordon drop the failed plane on an
+        axis whose ring is closed, keeping the rest as one slab that runs
+        through the closing circuit (:mod:`slicepacker.seam`). Off by default,
+        so the default answer is the static model's (ASSUMPTIONS A2); the
+        comparison reports both.
         """
         s = self.stitched[job_id]
         if failed_cube not in s.cubes:
@@ -565,6 +591,10 @@ class OCSPod:
         if shrink.rect is not None:
             cordon_wraps = tuple(w and e == t for w, e, t
                                  in zip(s.wraps(), shrink.rect.extent, s.extents))
+        if seam_crossing:
+            seam = cheapest_shrink_across_seam(rect, virtual, s.wraps())
+            if seam.kind == "seam" and seam.chips_lost < cordon_lost:
+                cordon_lost, cordon_wraps = seam.chips_lost, seam.wraps_after
 
         m = len(s.cubes)
         limit = len(self.domains()[self.domain(failed_cube)])
@@ -606,33 +636,41 @@ class OCSPod:
     def port_usage(self) -> Dict[Tuple[int, int, int], int]:
         """Ports in use on each OCS, keyed (domain, axis, face position).
 
-        Every bundle uses one ``+`` port and one ``-`` port on each switch of its
-        axis. Raises if any cube face is used twice --- a port can carry one
-        circuit.
+        A stitched bundle uses one ``+`` port and one ``-`` port on every switch
+        of its axis. A sub-slice's loop uses them only at the face positions its
+        rectangle covers. Raises if any (cube, face, position) port is used
+        twice --- a port carries one circuit. The check is per position, so two
+        sub-slices may loop one cube face only where they do not overlap
+        (assurance finding A8: a blanket waiver for shared cubes hid collisions).
         """
         used: Dict[Tuple[int, int, int], int] = {}
-        taken: Set[Tuple[int, int, str]] = set()
-        bundles: List[Circuit] = []
+        taken: Set[Tuple[int, int, str, int]] = set()
+        bundles: List[Tuple[Circuit, Sequence[int]]] = []
         for s in self.stitched.values():
-            bundles.extend(s.circuits)
+            for c in s.circuits:
+                bundles.append((c, range(self.config.face_links(c[0]))))
         for s in self.sub.values():
-            bundles.extend(s.circuits)
-        for axis, src, dst in bundles:
+            for c in s.circuits:
+                bundles.append((c, _face_positions(s.rect, c[0], self.config.geometry)))
+        for (axis, src, dst), positions in bundles:
             if self.domain(src) != self.domain(dst):
                 raise ValueError(f"circuit {axis},{src}->{dst} crosses a domain")
-            for port in ((axis, src, "+"), (axis, dst, "-")):
-                if port in taken and not _shared_subcube_face(self, axis, src, dst):
-                    raise ValueError(f"port {port} carries two circuits")
-                taken.add(port)
-            for p in range(self.config.face_links(axis)):
+            for p in positions:
+                for port in ((axis, src, "+", p), (axis, dst, "-", p)):
+                    if port in taken:
+                        raise ValueError(f"port {port} carries two circuits")
+                    taken.add(port)
                 key = (self.domain(src), axis, p)
                 used[key] = used.get(key, 0) + 2
         return used
 
 
-def _shared_subcube_face(pod: OCSPod, axis: int, src: int, dst: int) -> bool:
-    """Sub-slices that loop the same cube face use disjoint face positions."""
-    return src == dst and src in pod.partial_cubes()
+def _face_positions(rect: SliceRect, axis: int, geometry: Coord) -> List[int]:
+    """The face positions (switch indices) a rectangle covers on ``axis``."""
+    others = [i for i in range(len(geometry)) if i != axis]
+    shape = tuple(geometry[i] for i in others)
+    ranges = [range(rect.origin[i], rect.origin[i] + rect.extent[i]) for i in others]
+    return sorted(_ravel(pos, shape) for pos in itertools.product(*ranges))
 
 
 @dataclass(frozen=True)
