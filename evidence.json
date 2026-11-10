@@ -33,7 +33,7 @@
     "README.md": {
       "source_type": "model-assumption",
       "location": "README.md",
-      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8; 2026-11-09 finding 3 qualified as a property of the face-pull, no-seam-crossing cordon (A2), its numbers unchanged; SHA-256 bound below",
+      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8; 2026-11-09 finding 3 qualified as a property of the face-pull, no-seam-crossing cordon (A2), its numbers unchanged; 2026-11-10 CTO review of PR #1: counts corrected, no-benefit cases beside the first table, declined items 12 and 13; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -68,7 +68,7 @@
     "docs/ocs-cubes.md": {
       "source_type": "model-assumption",
       "location": "docs/ocs-cubes.md",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); 2026-11-10 CTO review of PR #1: counts corrected, no-benefit cases beside the first table, declined items 12 and 13; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -338,7 +338,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "cbff5e0a78d82e413a2ed7ed9d60a7c5c656281f5eea128577672d2b59245199"
+      "sha256": "c9c946e63036f63202b1fcad30589f0e18d299446e6d33b41e19e0fd6bf2c3bf"
     },
     {
       "path": "src/slicepacker/ocs.py",
@@ -354,7 +354,7 @@
     },
     {
       "path": "docs/ocs-cubes.md",
-      "sha256": "3c695d7ccb055ba2b6b1ab41f8d3a14735ed5fa310adc7ae2fbc780f553a59af"
+      "sha256": "4e2f9afde4b9e31fdd45f2624b3ccc06a2af0f9252c5f31789113b49bd31996e"
     },
     {
       "path": "src/slicepacker/seam.py",

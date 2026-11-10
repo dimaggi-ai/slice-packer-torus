@@ -181,8 +181,8 @@ had been passing on machinery that was no longer there.
 
 ```bash
 make data          # fetch + SHA-verify the Titan dataset (once; ~4 MB)
-make test          # 104 unit tests and 22 mutation tests (~5 min: each mutation reruns the registry)
-make validate      # 29 registry points and 16 declined items, then the OCS registry (18 points, 11 declined)
+make test          # 182 tests: 105 unit and 22 mutation on the static model, 55 on the OCS mode (~5 min: each mutation reruns the registry)
+make validate      # 29 registry points and 16 declined items, then the OCS registry (18 points, 13 declined)
 make examples      # 24 examples, each pinned to its exit code
 make experiments   # the three figures quoted above; each exits 1 if it stops holding
 ```
@@ -220,8 +220,8 @@ claims, not inputs; this model has no time and cannot check them. The OCS
 registry is separate, so the 29 points above and their output are unchanged.
 
 ```bash
-PYTHONPATH=src:validation python validation/validate_ocs.py    # 18 points, 11 declined items
-PYTHONPATH=src:validation python -m pytest tests/test_ocs.py tests/test_ocs_assurance.py   # 37 tests and 12 mutations
+PYTHONPATH=src:validation python validation/validate_ocs.py    # 18 points, 13 declined items
+PYTHONPATH=src:validation python -m pytest tests/test_ocs.py tests/test_ocs_assurance.py   # 43 tests and 12 mutations
 PYTHONPATH=src python experiments/ocs/compare.py               # every table; exits 1 if a headline fails
 ```
 
