@@ -18,9 +18,12 @@ placements on a 16-ary 3-cube, no slice received a three-dimensional torus
 and every slice lost at least one ring — the wraparound belongs to the
 pod. **(2)** Free chips overstate placeable capacity by 20–30% through the
 mid-occupancy range, and the gap widens as the pod fills. **(3)** One chip
-failure costs between 6% and 50% of a slice depending on where it lands;
-the worst case is exactly half the slice for every shape, so packing
-cannot buy it down, and the compact shape that wins on diameter has the
+failure costs between 6% and 50% of a slice depending on where it lands,
+when the slice may only shrink by pulling a face in and may not re-form
+across a ring's seam; under that rule the worst case is exactly half the
+slice for every shape, so packing cannot buy it down (a slice that spans a
+whole ring could instead re-form through the wraparound for one plane at
+any location, at the cost of that ring), and the compact shape that wins on diameter has the
 *highest* typical failure cost. **(4)** After a failure, the shrink that
 is always available breaks the rank grid and orphans the checkpoint, while
 the same-shape move that keeps the checkpoint existed in only 97 of 120
@@ -83,8 +86,8 @@ published summary file, so they are declined rather than approximated.
 
 The allocation layer of a torus pod is where geometry quietly converts
 hardware into less capacity than the inventory shows: rings become meshes,
-free chips become unplaceable, a corner failure and a centre failure
-differ by a factor of eight. The one measured fleet adds the operational
+free chips become unplaceable, and under a no-seam-crossing cordon a
+corner failure and a centre failure differ by a factor of eight. The one measured fleet adds the operational
 verdict: spend hazard estimates on placement, not eviction — which is what
 Titan itself did, re-cutting the job mix onto reliable nodes rather than
 draining ahead of failures it could rank but not schedule around.

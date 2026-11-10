@@ -20,6 +20,8 @@ jobs:
         run: PYTHONPATH=src:validation python -m pytest tests/ -q
       - name: Validation registry, and what it declines
         run: python validation/validate_packing.py
+      - name: OCS validation registry, and what it declines
+        run: PYTHONPATH=src:validation python validation/validate_ocs.py
       - name: Every example input reaches its documented result
         run: python examples/run_examples.py
       - name: The three quoted figures reproduce
@@ -27,6 +29,8 @@ jobs:
           PYTHONPATH=src python experiments/failure_exposure.py
           PYTHONPATH=src python experiments/fragmentation_curve.py
           PYTHONPATH=src python experiments/isolation_cost.py
+      - name: OCS vs static comparison, reduced trials (the full run stays local)
+        run: PYTHONPATH=src python experiments/ocs/compare.py --quick
       - name: The installed console script works
         run: |
           slicepacker --version

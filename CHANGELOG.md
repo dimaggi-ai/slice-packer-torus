@@ -1,5 +1,77 @@
 # Changelog
 
+## Unreleased
+
+A second fabric: cubes joined by optical circuit switches, compared with the
+static torus on matched seeds. Nothing existing changes.
+
+### Added
+
+- `ocs` --- a pod of cubes (default 4x4x4) stitched by optical circuit
+  switches: super-slices of whole cubes, sub-slices inside one cube, a port
+  limit that splits the pod into domains, a shape cap, and borrow or reserve
+  spare-cube policies with swap, re-stitch and cordon recovery. A ring exists
+  only where a closing circuit is configured; the chip graph is built from the
+  circuit list and its diameter checked against the closed forms.
+- `experiments/ocs/compare.py` --- the three static experiments rerun for both
+  fabrics on matched seeds, plus the cases where cubes do not help: sub-cube
+  jobs, sizes that are not whole cubes, shape caps, port limits and spare cost.
+  Exits 1 if any of its headlines stops holding (13 after the assurance fixes).
+- `validation/validate_ocs.py` --- a separate registry: 16 points (2
+  calibrated to Jouppi et al., ISCA 2023 and Dally 1990, 9 emergent, 5 sanity)
+  and 9 declined items, including that Google's 5x and 4.5x figures are vendor
+  claims and not inputs.
+- `tests/test_ocs.py` --- 18 tests and 9 measured mutations. One asserts a blind
+  spot: no point measures sub-cube utilisation. The adjacency mutation first
+  measured an empty red set; the gap point now releases a matched third of
+  jobs before measuring.
+- `docs/ocs-cubes.md` and an additive README section.
+- `make ocs-smoke` (the comparison with reduced trials, ~45 s) and
+  `make experiments-ocs` (the full comparison, ~4 min).
+
+### Changed
+
+- `make validate` also runs the OCS registry; `make smoke-test` also runs
+  `ocs-smoke`. CI gains two steps in the existing style: the OCS registry and
+  the reduced-trial comparison. No new actions or network destinations.
+- `evidence.json` rebinds README.md and docs/ocs-cubes.md, whose text
+  changed for these targets.
+- README finding 3, `docs/the-models.md` section 3, the paper's abstract and
+  conclusion, and DECISIONS D2 now say the failure-cost figures (256--2,048
+  chips by location for `16x16x16`) assume a face-pull-only shrink with no
+  seam crossing (ASSUMPTIONS A2). A slice that spans a whole ring could
+  instead re-form through the wraparound for 256 chips anywhere, at the cost
+  of one ring (`slicepacker.seam`, `docs/ocs-cubes.md` section 2). This edits
+  existing README text. No code, number or output changes.
+
+### Fixed (assurance findings on the OCS mode, 2026-11-09)
+
+- **A stronger static baseline (A1).** The static cordon only pulls a face
+  inward and never re-forms a slab across the seam (ASSUMPTIONS A2), so it
+  charged a centre failure 2,048 chips. New opt-in `slicepacker.seam`:
+  a seam-crossing shrink (drop the failed plane, keep the rest through the
+  seam; costs one plane and that axis's ring) and `SeamFabric`, which places
+  across the seam. `cordon.py` and `Fabric` are unchanged, and so is every
+  existing output. The OCS comparison reports both baselines. With
+  seam-crossing on both fabrics, one failure costs 256 chips everywhere on
+  each, so the headline "without a spare, cubes halve the worst case" holds
+  only against the no-seam baseline and is restated that way.
+- **The spare case runs on more hardware (A2).** A 65th cube and 136 rather
+  than 128 ports per switch. Declined item 10 and the tables say so.
+- **Reserved spares are held per domain (A3).** Before, reserve mode held the
+  last N cubes of the pod, all in the last domain. Reserving more spares than a
+  domain holds is now an error.
+- **`copy()` keeps a used-up spare pool used up (A4).** The sentinel is now
+  `None`; an empty list meant "fill in again".
+- **Reached occupancy is reported beside each target (A5).** Off-cube rows are
+  shown with what was admitted, and no benefit is claimed from them.
+- **The OCS port check looks at face positions (A8).** It waived the check for
+  any self-loop on a shared cube; it now checks the positions each loop uses.
+- `tests/test_ocs_assurance.py` (19 tests, each written and run failing before
+  its fix) and three new mutations: pod-wide spares, a copy that refills the
+  pool, and no seam-crossing. The registry is 18 points (2 calibrated, 9
+  emergent, 7 sanity) and 11 declined items; `compare.py` has 13 headlines.
+
 ## 1.1.0 --- 2026-09-02
 
 The repository gains its first measurement, and the boundary around it.

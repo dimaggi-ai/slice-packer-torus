@@ -33,6 +33,14 @@ recovers in packing.
 **Cost.** Real packing efficiency, and the amount is not quantified anywhere
 here. Declined item 12.
 
+**Partly quantified since (2026-11-09, compute-assurance-tasks#114).** The
+opt-in `slicepacker.seam` drops this rule for the OCS comparison only. For a
+slice that spans a whole ring, it changes failure cost from 256--2,048 chips
+by location (face-pull only) to 256 anywhere, at the cost of one ring. For
+cube-aligned placement it narrows the free-chip gap by 0.8--4.4 points. The
+static model, its registry and its outputs still use this rule unchanged.
+`docs/ocs-cubes.md`, section 2.
+
 ## D3 --- The drain search is exact, or it refuses
 
 `embed.drain_plan` searches subsets of resident jobs smallest-total-chips-first

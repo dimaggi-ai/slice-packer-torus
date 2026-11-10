@@ -84,6 +84,15 @@ pull a face in past the failed chip --- and you cannot simply delete the plane
 containing it, because removing an interior plane splits the rectangle into two
 rectangles, and a job holding one slice cannot be handed two.
 
+That last step assumes the rectangle may not cross the seam of a ring
+(ASSUMPTIONS A2, DECISIONS D2). If the slice spans a whole ring, the two pieces
+are adjacent through the wraparound and form one slab: dropping the failed
+plane loses one plane (256 chips for `16x16x16`) at any location, plus that
+axis's ring. Everything below is the face-pull-only cost, a property of the
+no-seam rule rather than of torus hardware; it stands for slices that do not
+own a whole ring. The seam-crossing alternative is
+`src/slicepacker/seam.py`, compared in `docs/ocs-cubes.md` (section 2).
+
 That makes position, not failure, the cost driver:
 
 ```
@@ -93,7 +102,7 @@ That makes position, not failure, the cost driver:
   centre    (8, 8, 8)   2,048 chips    50.0%
 ```
 
-Two exact results follow, and both are checked:
+Two exact results follow for the face-pull rule, and both are checked:
 
 - **The worst case is `chips / 2` when an axis has even extent.** At the centre
   of an odd extent `d`, excluding the failed plane loses `(d+1)/(2d)` of

@@ -42,8 +42,17 @@ three-dimensional torus, and every slice lost at least one ring. The wraparound 
 ```
 
 **3. One chip failure costs between 6% and 50% of a slice, depending on where
-it was.** Getting back to a rectangle means pulling a face in past the failure.
-A corner costs one plane; the centre costs half the slice.
+it was** --- when the slice must stay a rectangle in absolute coordinates.
+Getting back to a rectangle then means pulling a face in past the failure. A
+corner costs one plane; the centre costs half the slice.
+
+These figures assume a face-pull-only shrink with no seam crossing (ASSUMPTIONS
+A2, DECISIONS D2). They are a property of that rule, not of torus hardware. A
+slice that spans a whole ring, like the `16x16x16` below, can instead drop the
+failed plane and re-form through the wraparound: it loses 256 chips at any
+location, at the cost of that axis's ring. A slice that does not own a whole
+ring has no seam to cross, and the figures stand for it. See
+`docs/ocs-cubes.md` (section 2) and `src/slicepacker/seam.py`.
 
 ```
   where     coordinate      chips lost    share
@@ -53,7 +62,8 @@ A corner costs one plane; the centre costs half the slice.
   centre    (8, 8, 8)            2,048    50.0%
 ```
 
-The worst case is **half the slice when a non-unit axis has even extent**.
+Under the face-pull rule, the worst case is **half the slice when a non-unit
+axis has even extent**.
 Odd-only shapes can lose more: a central failure in `3x3x3` loses 18 of 27 chips.
 The best case is `chips / longest axis` --- which means the compact
 shape that wins on diameter is the one with the *highest* typical failure cost.
@@ -172,10 +182,52 @@ had been passing on machinery that was no longer there.
 ```bash
 make data          # fetch + SHA-verify the Titan dataset (once; ~4 MB)
 make test          # 104 unit tests and 22 mutation tests (~5 min: each mutation reruns the registry)
-make validate      # 29 registry points and 16 declined items
+make validate      # 29 registry points and 16 declined items, then the OCS registry (18 points, 11 declined)
 make examples      # 24 examples, each pinned to its exit code
 make experiments   # the three figures quoted above; each exits 1 if it stops holding
 ```
+
+## Optical cube stitching (unreleased)
+
+Everything above assumes one static torus. `ocs` models the other design: a
+pod of 4x4x4 cubes joined by optical circuit switches, as in TPU v4 (Jouppi et
+al., ISCA 2023) and GKE dynamic slicing. It is compared with the static torus
+on matched pods, arrivals, failures and seeds. `docs/ocs-cubes.md` has the
+model, every table and its limits.
+
+- **For cube-aligned jobs the free-chip gap goes to zero** when any cube shape
+  is allowed (static: 8--32%; 7--28% if the static torus may place across its
+  seam), and every stitched slice gets a ring on all three axes (static: none
+  of 372 placed slices). The zero is true by construction: any free cube count
+  can be stitched, so it measures the rule, not an advantage found by search.
+  Each fabric fills toward the same target and the reached occupancy is
+  reported beside it; at 70--85% the OCS pods are 2--6 points fuller.
+- **It comes back** with a shape menu (2--10% at 4 cubes per axis), with
+  sub-cube jobs (up to 5.4%), and with port limits (52.8% at 32 ports). Sizes
+  that are not whole cubes are refused: from a 96--640-chip workload the capped
+  pod admitted nothing.
+- **A spare cube makes one chip failure cost the job nothing anywhere**, on
+  more hardware: a 65th cube and 136 rather than 128 ports per switch, with no
+  static spare modelled. Static loses 256--2,048 chips if its slab may not cross
+  the seam of a ring (assumption A2, as above), 256 everywhere if it may. The
+  cost moves to the pod: one cube per failure, and borrowing a spare failed for
+  10 of 40 failures at 95% occupancy.
+- **Without a spare, cubes beat only the no-seam torus** (worst case 1,024
+  against 2,048). With seam-crossing on both, both lose 256 everywhere.
+
+Google's "up to 5x faster" start and "up to 4.5x faster" recovery are vendor
+claims, not inputs; this model has no time and cannot check them. The OCS
+registry is separate, so the 29 points above and their output are unchanged.
+
+```bash
+PYTHONPATH=src:validation python validation/validate_ocs.py    # 18 points, 11 declined items
+PYTHONPATH=src:validation python -m pytest tests/test_ocs.py tests/test_ocs_assurance.py   # 37 tests and 12 mutations
+PYTHONPATH=src python experiments/ocs/compare.py               # every table; exits 1 if a headline fails
+```
+
+`make validate` and CI run the OCS registry; `make test` collects `tests/test_ocs.py`;
+`make ocs-smoke` (and CI) run the comparison with reduced trials (~45 s);
+`make experiments-ocs` runs the full comparison (~4 min), which CI does not.
 
 ## Reading order
 
