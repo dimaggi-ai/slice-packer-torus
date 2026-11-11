@@ -19,7 +19,7 @@ and every slice lost at least one ring — the wraparound belongs to the
 pod. **(2)** Free chips overstate placeable capacity by 20–30% through the
 mid-occupancy range, and the gap widens up to 70% occupancy (32%), then is
 29% at 85%. **(3)** One chip
-failure costs between 6% and 50% of a slice depending on where it lands,
+failure costs between 6% and 50% of a 16x16x16 slice depending on where it lands,
 when the slice may only shrink by pulling a face in and may not re-form
 across a ring's seam; under that rule the worst case is half the
 slice for every shape with an even non-unit side, and more for a shape with

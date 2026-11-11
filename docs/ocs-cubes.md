@@ -23,7 +23,8 @@ and could not be checked by it: the model has no time.
 
 The static findings this module is aimed at are README findings 1--3: placed
 slices almost never get a closed ring, free chips overstate capacity by 8--32%,
-and one chip failure costs 6--50% of a slice depending on where it is. The
+and one chip failure costs 6--50% of a `16x16x16` slice depending on where it
+is (a shape with only odd sides can lose more: 18 of 27 chips for `3x3x3`). The
 last rests on the static model's rule that no slice crosses the seam of a ring
 (ASSUMPTIONS A2); section 2 reports it without that rule too.
 

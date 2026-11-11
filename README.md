@@ -41,8 +41,8 @@ three-dimensional torus, and every slice lost at least one ring. The wraparound 
          85%       634        448         29%           41/60
 ```
 
-**3. One chip failure costs between 6% and 50% of a slice, depending on where
-it was** --- when the slice must stay a rectangle in absolute coordinates.
+**3. One chip failure costs between 6% and 50% of a `16x16x16` slice, depending
+on where it was** --- when the slice must stay a rectangle in absolute coordinates.
 Getting back to a rectangle then means pulling a face in past the failure. A
 corner costs one plane; the centre costs half the slice.
 

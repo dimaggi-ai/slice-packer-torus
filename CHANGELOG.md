@@ -92,7 +92,9 @@ static torus on matched seeds. Nothing existing changes.
 - Counts and ranges corrected in this file, `README.md`, `paper/paper.md`,
   `DECISIONS.md` and `docs/ocs-cubes.md`. The paper's finding 3 no longer
   says the worst case is half the slice for every shape: a shape with only
-  odd sides loses more (18 of 27 chips for `3x3x3`). `docs/ocs-cubes.md`
+  odd sides loses more (18 of 27 chips for `3x3x3`). The 6 to 50% range in
+  `README.md`, the paper and `docs/ocs-cubes.md` is now stated for the
+  `16x16x16` slice it was measured on. `docs/ocs-cubes.md`
   lists four no-benefit cases beside its first results table.
 - `evidence.json` re-binds `src/slicepacker/ocs.py`,
   `validation/validate_ocs.py`, `README.md` and `docs/ocs-cubes.md`, the four
