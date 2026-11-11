@@ -22,8 +22,9 @@ quoted here for context only, are **not an input** to anything in this model,
 and could not be checked by it: the model has no time.
 
 The static findings this module is aimed at are README findings 1--3: placed
-slices almost never get a closed ring, free chips overstate capacity by 8--30%,
-and one chip failure costs 6--50% of a slice depending on where it is. The
+slices almost never get a closed ring, free chips overstate capacity by 8--32%,
+and one chip failure costs 6--50% of a `16x16x16` slice depending on where it
+is (a shape with only odd sides can lose more: 18 of 27 chips for `3x3x3`). The
 last rests on the static model's rule that no slice crosses the seam of a ring
 (ASSUMPTIONS A2); section 2 reports it without that rule too.
 
@@ -31,7 +32,7 @@ last rests on the static model's rule that no slice crosses the seam of a ring
 
 | Element | Rule | Source or label |
 | --- | --- | --- |
-| Cube | A fixed electrical mesh, `geometry` chips (default 4x4x4 = 64) | 4x4x4 blocks: Jouppi et al., ISCA 2023; GKE docs. The 64-chip figure follows from 4x4x4 and from Google's 4x4x16 = 256 example |
+| Cube | A fixed electrical mesh, `geometry` chips (default 4x4x4 = 64). Only 4x4x4 is tested (item 12 below) | 4x4x4 blocks: Jouppi et al., ISCA 2023; GKE docs. The 64-chip figure follows from 4x4x4 and from Google's 4x4x16 = 256 example |
 | Switches | One OCS per (axis, face position): 48 for a 4x4x4 cube. Every cube takes one `+` and one `-` port on each | Jouppi et al.: 64 blocks, 48 OCSes |
 | Port limit | An OCS with `ocs_ports` usable ports serves `ocs_ports // 2` cubes. That group is a **domain**; stitching never crosses one | 136x136 Palomar switch, 128 ports in use and 8 kept for testing and repair (Jouppi et al.). Default 128 |
 | Super-slice | Any free healthy cubes in one domain, arranged as a rectangle of cubes, at most `max_cubes_per_axis` long | Parameter. Default 4, to match the 16-chip axes of the static 16x16x16 pod |
@@ -75,10 +76,20 @@ Values are overstatement (reached occupancy). At 70% and 85% the OCS pods
 reach 2--6 points more occupancy than static, so those rows compare slightly
 fuller OCS pods.
 
+**No-benefit cases to read beside this table.** In these four the OCS pod is
+equal to the static torus or worse. Each is measured or stated in full below.
+
+| Case | Static torus | OCS cubes |
+| --- | --- | --- |
+| Job sizes that are not whole cubes (96, 160, 320 and 640 chips) | Refused 0 requests | With the 4-per-axis cap: refused all 144,000 requests and admitted nothing. With any cube shape: refused 1,700 requests |
+| One chip failure, no spare, both fabrics may cross the seam | 256 chips lost at every location | 256 chips lost at every location. The 1,024 against 2,048 worst case holds only against a static torus that may not cross its seam |
+| Fewer switch ports | Places a 4,096-chip job | 64 ports: largest job 2,048 chips, 16.7% overstated at the 40% target. 32 ports: 1,024 chips, 52.8%. At 128 ports: 4,096 chips, 3.6% with the cap |
+| Equal hardware with one cube reserved (64 cubes, 128 ports) | Places a 4,096-chip job | Largest job 3,072 chips with the cap, 4,032 with any cube shape. A 4,096-chip job is infeasible. The zero-loss spare row in section 2 needs a 65th cube and 136 ports per switch |
+
 With any cube shape allowed, the gap is **zero by construction** for
 cube-aligned jobs: any free cube count can be stitched, so the 0% column is a
 property of the rule, not a measured advantage. Crossing the seam narrows the
-static gap by 0.8--4.4 points; it does not close it. The zero still holds after
+static gap by 0.7--4.4 points; it does not close it. The zero still holds after
 a matched third of the jobs leave a pod filled to 85%, which is the test that
 actually separates "any free cubes" from "adjacent free cubes" (see the
 mutation note below). After those departures the static torus overstates by
@@ -207,10 +218,17 @@ fabrics are identical.
     slice across the seam of a ring (ASSUMPTIONS A2). The registry's failure
     points report that baseline and a seam-crossing one (`slicepacker.seam`);
     its gap points use the first only. `compare.py` measures both.
+12. **Only the 4x4x4 cube is tested.** `geometry` is a parameter, but no
+    registry point, test or experiment uses another cube size, and
+    `compare.py` fixes 64 cubes of 4x4x4. The results are not claimed for any
+    other geometry.
+13. **A sub-cube slice has no failure path.** `recover()` and `apply_swap()`
+    refuse a sub-cube job with `ValueError`. Swap, re-stitch and cordon cover
+    stitched slices only.
 
 ## Validation
 
-* **Registry:** 18 points (2 calibrated, 9 emergent, 7 sanity) and 11 declined
+* **Registry:** 18 points (2 calibrated, 9 emergent, 7 sanity) and 13 declined
   items, separate from the static registry. The static registry's 29 points
   and its output are unchanged.
 * **Mutations:** twelve. Eleven delete a rule and assert the exact red set;
@@ -257,7 +275,7 @@ quick comparison; the full run stays local.
 
 Review the assumptions before the numbers: the cube size, the port limit and
 domain rule, the shape cap, the spare policies and the ring rule. Each is a
-parameter, and items 1, 2, 5 and 8 above say where each could be wrong. The
+parameter, and items 1, 2, 5, 8 and 12 above say where each could be wrong. The
 no-benefit cases are the result as much as the benefits are.
 
 ## Sources

@@ -81,6 +81,12 @@ DECLINED: Tuple[str, ...] = (
     "(ASSUMPTIONS A2). The failure points here report both that baseline and a "
     "seam-crossing one (slicepacker.seam); the gap points use the first only, and "
     "experiments/ocs/compare.py measures the second.",
+    "Cube geometry is a parameter, but only 4x4x4 is tested. No point, test or "
+    "experiment uses another cube size, and the comparison fixes 64 cubes of "
+    "4x4x4. The results are not claimed for any other geometry.",
+    "A sub-cube slice has no failure path. recover() and apply_swap() refuse a "
+    "sub-cube job with ValueError; swap, re-stitch and cordon cover stitched "
+    "slices only.",
 )
 
 

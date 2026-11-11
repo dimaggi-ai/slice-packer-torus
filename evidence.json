@@ -33,7 +33,7 @@
     "README.md": {
       "source_type": "model-assumption",
       "location": "README.md",
-      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8; 2026-11-09 finding 3 qualified as a property of the face-pull, no-seam-crossing cordon (A2), its numbers unchanged; SHA-256 bound below",
+      "version_date": "2026-09-10 closure working tree; 2026-11-09 additive OCS section and make-target notes (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8; 2026-11-09 finding 3 qualified as a property of the face-pull, no-seam-crossing cordon (A2), its numbers unchanged; 2026-11-10 CTO review of PR #1: test and declined-item counts corrected in the make-target and command comments, finding 3 range stated for the 16x16x16 slice; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -47,14 +47,14 @@
     "src/slicepacker/ocs.py": {
       "source_type": "model-assumption",
       "location": "src/slicepacker/ocs.py",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); 2026-11-10 CTO review of PR #1: recover() and apply_swap() refuse a sub-cube job by name, comment on the shape clamp; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
     "validation/validate_ocs.py": {
       "source_type": "model-assumption",
       "location": "validation/validate_ocs.py",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114); 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); 2026-11-10 CTO review of PR #1: declined items 12 and 13 added; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -68,7 +68,7 @@
     "docs/ocs-cubes.md": {
       "source_type": "model-assumption",
       "location": "docs/ocs-cubes.md",
-      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); SHA-256 bound below",
+      "version_date": "2026-11-09 OCS cube mode (compute-assurance-tasks#114), plus make-target notes; 2026-11-09 assurance fixes A1-A8 (seam-crossing baseline, per-domain spares, port check); 2026-11-10 CTO review of PR #1: counts and the 8--32% quote corrected, no-benefit cases beside the first table, declined items 12 and 13, finding 3 quote stated for the 16x16x16 slice with the odd-shape worst case; SHA-256 bound below",
       "license_or_reuse": "Repository-authored analysis; third-party facts referenced, no new external raw data redistributed",
       "scope": "Local authoritative definition or claim. External provenance retained in SOURCES/REFERENCES and inline citations; scenario choices are not empirical measurements."
     },
@@ -338,15 +338,15 @@
     },
     {
       "path": "README.md",
-      "sha256": "cbff5e0a78d82e413a2ed7ed9d60a7c5c656281f5eea128577672d2b59245199"
+      "sha256": "71481005727aefd53929146ca20c3d1d1cfdc58a369814c3788f6e2ac1db026a"
     },
     {
       "path": "src/slicepacker/ocs.py",
-      "sha256": "82669d8755afcc00fb2183d17b705206e74b59f82b90d201282946c92ab78979"
+      "sha256": "6b94dc95188960f6d0f0639e23ff56d5d915fa2818fd07d2b7d8730e463006f7"
     },
     {
       "path": "validation/validate_ocs.py",
-      "sha256": "8ad73e98181478e9c5263cb73d6e4dfd1ddedf2cfdc5dcd5143f2342ed6d936b"
+      "sha256": "a7ee9fd1ac898a11843b177b6780556578e55e7e7097b782ce81b4c82078d4b9"
     },
     {
       "path": "experiments/ocs/compare.py",
@@ -354,7 +354,7 @@
     },
     {
       "path": "docs/ocs-cubes.md",
-      "sha256": "3c695d7ccb055ba2b6b1ab41f8d3a14735ed5fa310adc7ae2fbc780f553a59af"
+      "sha256": "bf006c72ca31aaa9610ebdc326fce1c18abd5cf1d94bf25169c58ec51a2c0024"
     },
     {
       "path": "src/slicepacker/seam.py",

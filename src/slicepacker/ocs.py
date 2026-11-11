@@ -397,7 +397,7 @@ class OCSPod:
     def cube_shapes(self, m: int, limit: int) -> Tuple[Coord, ...]:
         """Cube-count shapes for ``m`` cubes, compact first."""
         cap = self.config.max_cubes_per_axis or limit
-        cap = min(cap, limit)
+        cap = min(cap, limit)  # defensive: no caller's answer depends on it; a test pins it
         if cap < 1:
             return ()
         box = Topology((cap,) * self.config.ndim, (False,) * self.config.ndim)
@@ -551,6 +551,16 @@ class OCSPod:
                       {k: set(v) for k, v in self.unhealthy.items()},
                       list(self.spare_pool))
 
+    def _stitched_or_refuse(self, job_id: str) -> StitchedSlice:
+        """The stitched slice of ``job_id``. A sub-cube slice is refused by
+        name: this model has no failure path for one (declined item 13)."""
+        if job_id in self.sub:
+            raise ValueError(
+                f"{job_id} is a sub-cube slice; this model has no failure path "
+                "for sub-cube slices (swap, re-stitch and cordon cover stitched "
+                "slices only)")
+        return self.stitched[job_id]
+
     def swap_target(self, job_id: str, failed_cube: int) -> Optional[int]:
         """A healthy whole cube in the same domain to replace ``failed_cube``."""
         d = self.domain(failed_cube)
@@ -578,8 +588,11 @@ class OCSPod:
         through the closing circuit (:mod:`slicepacker.seam`). Off by default,
         so the default answer is the static model's (ASSUMPTIONS A2); the
         comparison reports both.
+
+        A sub-cube slice has no failure path here and is refused with
+        ``ValueError``.
         """
-        s = self.stitched[job_id]
+        s = self._stitched_or_refuse(job_id)
         if failed_cube not in s.cubes:
             raise ValueError(f"cube {failed_cube} is not part of {job_id}")
         pos = s.position(s.cubes.index(failed_cube))
@@ -617,6 +630,7 @@ class OCSPod:
 
     def apply_swap(self, job_id: str, failed_cube: int, local: Coord) -> StitchedSlice:
         """Mark the chip failed and replace its cube; the shape is unchanged."""
+        self._stitched_or_refuse(job_id)
         target = self.swap_target(job_id, failed_cube)
         if target is None:
             raise NoPlacement(f"{job_id}: no healthy cube to swap in")

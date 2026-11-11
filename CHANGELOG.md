@@ -17,11 +17,12 @@ static torus on matched seeds. Nothing existing changes.
   fabrics on matched seeds, plus the cases where cubes do not help: sub-cube
   jobs, sizes that are not whole cubes, shape caps, port limits and spare cost.
   Exits 1 if any of its headlines stops holding (13 after the assurance fixes).
-- `validation/validate_ocs.py` --- a separate registry: 16 points (2
-  calibrated to Jouppi et al., ISCA 2023 and Dally 1990, 9 emergent, 5 sanity)
-  and 9 declined items, including that Google's 5x and 4.5x figures are vendor
+- `validation/validate_ocs.py` --- a separate registry: 18 points (2
+  calibrated to Jouppi et al., ISCA 2023 and Dally 1990, 9 emergent, 7 sanity)
+  and 13 declined items, including that Google's 5x and 4.5x figures are vendor
   claims and not inputs.
-- `tests/test_ocs.py` --- 18 tests and 9 measured mutations. One asserts a blind
+- `tests/test_ocs.py` --- 30 tests: 18 on behaviour and 12 measured mutations.
+  One asserts a blind
   spot: no point measures sub-cube utilisation. The adjacency mutation first
   measured an empty red set; the gap point now releases a matched third of
   jobs before measuring.
@@ -70,7 +71,34 @@ static torus on matched seeds. Nothing existing changes.
 - `tests/test_ocs_assurance.py` (19 tests, each written and run failing before
   its fix) and three new mutations: pod-wide spares, a copy that refills the
   pool, and no seam-crossing. The registry is 18 points (2 calibrated, 9
-  emergent, 7 sanity) and 11 declined items; `compare.py` has 13 headlines.
+  emergent, 7 sanity) and 11 declined items at that point; `compare.py` has 13
+  headlines.
+
+### Fixed (CTO review of PR #1, 2026-11-10)
+
+- **Reserved spares are pinned to their domain by a test.** A swap that took
+  a spare from another domain passed every test. Two tests in
+  `tests/test_ocs_assurance.py` now fail on it.
+- **`recover()` and `apply_swap()` refuse a sub-cube job by name.** Both
+  raised `KeyError`. They now raise `ValueError` before any state changes. A
+  sub-cube slice has no failure path in this model (declined item 13).
+- **Only the 4x4x4 cube is tested, and the registry says so** (declined item
+  12). The OCS registry now prints 13 declined items.
+- The clamp of the shape cap to the domain size in `cube_shapes` changes no
+  answer through any caller in the model. It stays as a defensive line, with
+  a comment and a direct-call test.
+- `tests/test_ocs_assurance.py` holds 25 tests (6 added). `make test`
+  collects 182: 127 on the static model and 55 on the OCS mode.
+- Counts and ranges corrected in this file, `README.md`, `paper/paper.md`,
+  `DECISIONS.md` and `docs/ocs-cubes.md`. The paper's finding 3 no longer
+  says the worst case is half the slice for every shape: a shape with only
+  odd sides loses more (18 of 27 chips for `3x3x3`). The 6 to 50% range in
+  `README.md`, the paper and `docs/ocs-cubes.md` is now stated for the
+  `16x16x16` slice it was measured on. `docs/ocs-cubes.md`
+  lists four no-benefit cases beside its first results table.
+- `evidence.json` re-binds `src/slicepacker/ocs.py`,
+  `validation/validate_ocs.py`, `README.md` and `docs/ocs-cubes.md`, the four
+  bound files this review changed. No other entry changes.
 
 ## 1.1.0 --- 2026-09-02
 

@@ -37,7 +37,7 @@ here. Declined item 12.
 opt-in `slicepacker.seam` drops this rule for the OCS comparison only. For a
 slice that spans a whole ring, it changes failure cost from 256--2,048 chips
 by location (face-pull only) to 256 anywhere, at the cost of one ring. For
-cube-aligned placement it narrows the free-chip gap by 0.8--4.4 points. The
+cube-aligned placement it narrows the free-chip gap by 0.7--4.4 points. The
 static model, its registry and its outputs still use this rule unchanged.
 `docs/ocs-cubes.md`, section 2.
 

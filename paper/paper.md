@@ -17,11 +17,14 @@ seven findings from six geometric models and one measured failure history.
 placements on a 16-ary 3-cube, no slice received a three-dimensional torus
 and every slice lost at least one ring — the wraparound belongs to the
 pod. **(2)** Free chips overstate placeable capacity by 20–30% through the
-mid-occupancy range, and the gap widens as the pod fills. **(3)** One chip
-failure costs between 6% and 50% of a slice depending on where it lands,
+mid-occupancy range, and the gap widens up to 70% occupancy (32%), then is
+29% at 85%. **(3)** One chip
+failure costs between 6% and 50% of a 16x16x16 slice depending on where it lands,
 when the slice may only shrink by pulling a face in and may not re-form
-across a ring's seam; under that rule the worst case is exactly half the
-slice for every shape, so packing cannot buy it down (a slice that spans a
+across a ring's seam; under that rule the worst case is half the
+slice for every shape with an even non-unit side, and more for a shape with
+only odd sides (18 of 27 chips for 3x3x3), so packing cannot buy it down (a
+slice that spans a
 whole ring could instead re-form through the wraparound for one plane at
 any location, at the cost of that ring), and the compact shape that wins on diameter has the
 *highest* typical failure cost. **(4)** After a failure, the shrink that
@@ -59,7 +62,7 @@ rather than skipped, so a green run means the anchor was measured.
 
 The registry holds twenty-nine points — five calibrated, twelve emergent,
 twelve sanity — and prints sixteen declined items before any result. The
-suite is 104 unit tests, twenty-two mutation tests, and twenty-four
+suite is 105 unit tests, twenty-two mutation tests, and twenty-four
 examples. Mutation red sets are measured, not predicted, and one
 measurement earned its keep: the mutation that drops the hazard exposure
 clamp was measured to slip past every ordering assertion — the mutated
